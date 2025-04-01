@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Capstone</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_save">SaveActivity</string>
+</resources>
