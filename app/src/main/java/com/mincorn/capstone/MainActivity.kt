@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -88,6 +91,18 @@ fun BottomNavigationBar(navController: NavHostController) {
 
 @Composable
 fun HomeScreen() {
+    val types = listOf(
+        Type(R.drawable.logo, "정육/계란"),
+        Type(R.drawable.logo, "채소"),
+        Type(R.drawable.logo, "과일"),
+        Type(R.drawable.logo, "수산"),
+        Type(R.drawable.logo, "간편식품"),
+        Type(R.drawable.logo, "조미료"),
+        Type(R.drawable.logo, "베이커리"),
+        Type(R.drawable.logo, "유제품"),
+        Type(R.drawable.logo, "기타"),
+    )
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -111,21 +126,41 @@ fun HomeScreen() {
                     .size(24.dp)
             )
         }
-    }
 
-    HorizontalDivider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 70.dp),
-        thickness = 1.dp,
-        color = Color(0xFF868686)
-    )
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            thickness = 1.dp,
+            color = Color(0xFF868686)
+        )
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = "홈")
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 80.dp),
+            content = {
+                items(types) { type ->
+                    Column (
+                        modifier = Modifier
+                            .padding(14.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(type.image),
+                            contentDescription = "타입 아이콘",
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Text(
+                            text = type.name,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -137,59 +172,93 @@ fun SearchScreen() {
         Recipe("라멘", "어후 맛있겠다", R.drawable.logo),
     )
 
-    Column (
+    Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(top = 30.dp)
         ) {
-            Text(text = "레시피 검색", fontWeight = FontWeight.Bold)
+            Text(
+                text = "레시피 검색",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center)
+            )
             Icon(
-                painter = painterResource(id = R.drawable.add),
-                contentDescription = "검색",
-                modifier = Modifier.size(24.dp)
+                painter = painterResource(R.drawable.search),
+                contentDescription = "search",
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 13.dp)
+                    .size(24.dp)
             )
         }
-    }
 
-    VerticalDivider(color = Color(0xFF868686))
 
-    LazyColumn {
-        items(recipes.size) { index ->
-            val recipe = recipes[index]
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            thickness = 1.dp,
+            color = Color(0xFF868686)
+        )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = recipe.image),
-                    contentDescription = recipe.name,
-                    modifier = Modifier.size(64.dp),
-                )
-                Column(
-                    modifier = Modifier.padding(start = 8.dp)
+        LazyColumn {
+            items(recipes.size) { index ->
+                val recipe = recipes[index]
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 ) {
-                    Text(text = recipe.name, fontWeight = FontWeight.Bold)
-                    Text(text = recipe.description)
+                    Image(
+                        painter = painterResource(id = recipe.image),
+                        contentDescription = recipe.name,
+                        modifier = Modifier.size(64.dp),
+                    )
+                    Column(
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Text(text = recipe.name, fontWeight = FontWeight.Bold)
+                        Text(text = recipe.description)
+                    }
                 }
             }
         }
     }
 }
 
+@Preview(showBackground = true)
 @Composable
 fun StorageScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(text = "저장된 레시피가 없습니다.")
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 30.dp)
+        ) {
+            Text(
+                text = "레시픽 저장소",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.Center)
+            )
+        }
+
+
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            thickness = 1.dp,
+            color = Color(0xFF868686)
+        )
     }
 }
 
@@ -197,8 +266,4 @@ data class NavigationItem(val route: String, val icon: Int, val label: String)
 
 data class Recipe(val name: String, val description: String, val image: Int)
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Reciepick()
-}
+data class Type(val image: Int, val name: String)

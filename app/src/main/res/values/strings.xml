@@ -2,4 +2,7 @@
     <string name="app_name">Capstone</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_save">SaveActivity</string>
+    <string name="title_activity_on_boarding">OnBoarding</string>
+    <string name="title_activity_join">JoinActivity</string>
+    <string name="title_activity_choice_meat">ChoiceMeat</string>
 </resources>
