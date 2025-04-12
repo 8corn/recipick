@@ -11,11 +11,42 @@
         android:icon="@drawable/logo"
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Capstone">
+        android:theme="@style/Theme.Capstone"
+        android:usesCleartextTraffic="true"
+        android:name=".MyApplication">
+        <meta-data
+            android:name="com.naver.oauth.client_id"
+            android:value="@string/naver_client_id" />
+        <meta-data
+            android:name="com.naver.oauth.client_secret"
+            android:value="@string/naver_secret_id" />
+        <meta-data
+            android:name="com.naver.oauth.client_name"
+            android:value="레시픽" />
         <activity
-            android:name=".main.ChoiceMeat"
+            android:name=".recipick.PickRecipick"
             android:exported="false"
-            android:label="@string/title_activity_choice_meat"
+            android:label="@string/title_activity_pick_recipick"
+            android:theme="@style/Theme.Capstone" />
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="oauth"
+                    android:scheme="@string/kakao_redirect_app_key" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".main.TypeDetailScreen"
+            android:exported="false"
+            android:label="@string/title_activity_type_detail_screen"
             android:theme="@style/Theme.Capstone" />
         <activity
             android:name=".join.JoinActivity"
@@ -26,17 +57,17 @@
             android:name=".join.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
-            android:theme="@style/Theme.Capstone" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Capstone">
+            android:theme="@style/Theme.Capstone" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Capstone" />
     </application>
 
 </manifest>

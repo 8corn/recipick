@@ -1,10 +1,12 @@
 package com.mincorn.capstone
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,12 +24,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +42,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.mincorn.capstone.main.TypeDetailScreen
+import com.mincorn.capstone.recipick.PickRecipick
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +70,10 @@ fun Reciepick() {
             composable("home") { HomeScreen() }
             composable("search") { SearchScreen() }
             composable("storage") { StorageScreen() }
+            composable("typeDetail/{typename}") { backStackEntry ->
+                val typeName = backStackEntry.arguments?.getString("typeName") ?: ""
+                com.mincorn.capstone.main.TypeDetail(typeName)
+            }
         }
     }
 }
@@ -89,6 +99,7 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
 fun HomeScreen() {
     val types = listOf(
@@ -103,127 +114,154 @@ fun HomeScreen() {
         Type(R.drawable.logo, "기타"),
     )
 
-    Column(
-        modifier = Modifier.fillMaxSize()
+    val context = LocalContext.current
+
+    Surface(
+        contentColor = Color.White
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 30.dp)
+        Column(
+            modifier = Modifier.fillMaxSize(),
         ) {
-            Text(
-                text = "홈",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Center)
-            )
-            Icon(
-                painter = painterResource(R.drawable.add),
-                contentDescription = "add",
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 13.dp)
-                    .size(24.dp)
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+            ) {
+                Text(
+                    text = "홈",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                Icon(
+                    painter = painterResource(R.drawable.add),
+                    contentDescription = "add",
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 13.dp)
+                        .size(24.dp)
+                )
+            }
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                thickness = 1.dp,
+                color = Color(0xFF868686)
             )
-        }
 
-        HorizontalDivider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            thickness = 1.dp,
-            color = Color(0xFF868686)
-        )
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 80.dp),
-            content = {
-                items(types) { type ->
-                    Column (
-                        modifier = Modifier
-                            .padding(14.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(
-                            painter = painterResource(type.image),
-                            contentDescription = "타입 아이콘",
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Text(
-                            text = type.name,
-                            fontWeight = FontWeight.Bold
-                        )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 80.dp),
+                content = {
+                    items(types) { type ->
+                        Column(
+                            modifier = Modifier
+                                .padding(14.dp)
+                                .fillMaxWidth()
+                                .clickable {
+                                    val intent = Intent(context, TypeDetailScreen::class.java)
+                                    intent.putExtra("typeName", type.name)
+                                    context.startActivity(intent)
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = painterResource(type.image),
+                                contentDescription = "타입 아이콘",
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Text(
+                                text = type.name,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                            )
+                        }
                     }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
 @Composable
 fun SearchScreen() {
     val recipes = listOf(
-        Recipe("제육볶음", "간단한 최고의 반찬", R.drawable.logo),
-        Recipe("카레", "남은 음식 다 가져와", R.drawable.logo),
-        Recipe("라멘", "어후 맛있겠다", R.drawable.logo),
+        Recipe("제육볶음", "간단한 최고의 반찬", R.drawable.vmon),
+        Recipe("카레", "남은 음식 다 가져와", R.drawable.vmon),
+        Recipe("라멘", "어후 맛있겠다", R.drawable.vmon),
     )
 
-    Column(
-        modifier = Modifier.fillMaxSize()
+    val context = LocalContext.current
+
+    Surface (
+        color = Color.White
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 30.dp)
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = "레시피 검색",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Center)
-            )
-            Icon(
-                painter = painterResource(R.drawable.search),
-                contentDescription = "search",
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 13.dp)
-                    .size(24.dp)
-            )
-        }
-
-
-        HorizontalDivider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            thickness = 1.dp,
-            color = Color(0xFF868686)
-        )
-
-        LazyColumn {
-            items(recipes.size) { index ->
-                val recipe = recipes[index]
-
-                Row(
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+            ) {
+                Text(
+                    text = "레시피 검색",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                Icon(
+                    painter = painterResource(R.drawable.search),
+                    contentDescription = "search",
+                    tint = Color.Black,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = recipe.image),
-                        contentDescription = recipe.name,
-                        modifier = Modifier.size(64.dp),
-                    )
-                    Column(
-                        modifier = Modifier.padding(start = 8.dp)
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 13.dp)
+                        .size(24.dp)
+                )
+            }
+
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                thickness = 1.dp,
+                color = Color(0xFF868686)
+            )
+
+            LazyColumn {
+                items(recipes.size) { index ->
+                    val recipe = recipes[index]
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable {
+                                val intent = Intent(context, PickRecipick::class.java)
+                                intent.putExtra("pickName", recipe.name)
+                                context.startActivity(intent)
+                            }
                     ) {
-                        Text(text = recipe.name, fontWeight = FontWeight.Bold)
-                        Text(text = recipe.description)
+                        Image(
+                            painter = painterResource(id = recipe.image),
+                            contentDescription = recipe.name,
+                            modifier = Modifier.size(64.dp),
+                        )
+                        Column(
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Text(text = recipe.name, fontWeight = FontWeight.Bold)
+                            Text(text = recipe.description)
+                        }
                     }
                 }
             }
@@ -231,34 +269,38 @@ fun SearchScreen() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 fun StorageScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize()
+    Surface (
+        color = Color.White
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 30.dp)
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = "레시픽 저장소",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+            Box(
                 modifier = Modifier
-                    .align(Alignment.Center)
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+            ) {
+                Text(
+                    text = "레시픽 저장소",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                )
+            }
+
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                thickness = 1.dp,
+                color = Color(0xFF868686)
             )
         }
-
-
-        HorizontalDivider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            thickness = 1.dp,
-            color = Color(0xFF868686)
-        )
     }
 }
 

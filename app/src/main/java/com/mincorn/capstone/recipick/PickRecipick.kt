@@ -1,0 +1,157 @@
+package com.mincorn.capstone.recipick
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.mincorn.capstone.R
+import com.mincorn.capstone.main.Gemini
+
+class PickRecipick : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Gemini.init(applicationContext)
+        enableEdgeToEdge()
+        setContent {
+            val pickName = intent.getStringExtra("pickName") ?: ""
+            Pick(pickName)
+        }
+    }
+}
+
+@Composable
+fun Pick(pickName: String) {
+    val result = remember { mutableStateOf("불러오는 중...") }
+
+    LaunchedEffect(pickName) {
+        val response = Gemini.generateText("$pickName 만드는 재료와 레시피를 알려줘.")
+        result.value = response
+    }
+
+//    val lines = result.value.lines()
+//    val ingredients = lines.firstOrNull() ?: ""
+//    val recipe = lines.drop(1).joinToString("\n")
+
+    val (ingredients, recipe) = result.value.split("\n", limit = 2).let {
+        if (it.size >= 2) it[0] to it[1] else it [0] to ""
+    }
+
+    Surface(
+        color = Color.White
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+            ) {
+                Text(
+                    text = pickName,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                Icon(
+                    painter = painterResource(R.drawable.save),
+                    contentDescription = "save",
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 13.dp)
+                        .size(24.dp)
+                )
+            }
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                thickness = 1.dp,
+                color = Color(0xFF868686),
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.vmon),
+                    contentDescription = "food image",
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 16.dp)
+                        .size(280.dp)
+                )
+
+                Text(
+                    text = "필요한 재료",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 12.dp)
+                )
+
+                Text(
+                    text = ingredients,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 4.dp)
+                )
+
+                Text(
+                    text = "레시픽",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 16.dp)
+                )
+
+                Text(
+                    text = recipe,
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    Pick(pickName = "제육볶음")
+}

@@ -1,13 +1,17 @@
 package com.mincorn.capstone.join
 
 import android.annotation.SuppressLint
+import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +26,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -44,12 +49,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.kakao.sdk.auth.model.OAuthToken
+import com.kakao.sdk.user.UserApiClient
 import com.mincorn.capstone.MainActivity
 import com.mincorn.capstone.R
+import com.navercorp.nid.NaverIdLoginSDK
+import com.navercorp.nid.oauth.NidOAuthLogin
+import com.navercorp.nid.oauth.OAuthLoginCallback
+import com.navercorp.nid.profile.NidProfileCallback
+import com.navercorp.nid.profile.data.NidProfileResponse
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        initNaver(this)
+
         enableEdgeToEdge()
         setContent {
             Login()
@@ -57,8 +73,7 @@ class LoginActivity : ComponentActivity() {
     }
 }
 
-private val _isFailState = mutableStateOf(false)
-val isFailState: State<Boolean> = _isFailState
+private val isFailState = mutableStateOf(false)
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Preview(showBackground = true)
@@ -71,17 +86,17 @@ fun Login() {
 
     val corner = RoundedCornerShape(8.dp)
 
-    Scaffold(
-        containerColor = Color.White
+    Surface(
+        color = Color.White
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 30.dp,),
+                .padding(horizontal = 30.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
 
-        ) {
+            ) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "logo",
@@ -92,7 +107,7 @@ fun Login() {
                     )
                     .size(140.dp)
             )
-            
+
             TextField(
                 value = id,
                 onValueChange = setId,
@@ -150,7 +165,7 @@ fun Login() {
                                     context.finish()
                                 }
                             } else {
-                                _isFailState.value = true
+                                isFailState.value = true
                             }
                         }
                 },
@@ -181,7 +196,10 @@ fun Login() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp)
-                    .padding(horizontal = 44.dp),
+                    .padding(horizontal = 44.dp)
+                    .clickable {
+                        signInKakao(context)
+                    },
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -192,7 +210,10 @@ fun Login() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp)
-                    .padding(horizontal = 44.dp),
+                    .padding(horizontal = 44.dp)
+                    .clickable {
+                        signInNaver(context)
+                    },
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -221,4 +242,139 @@ fun Login() {
             )
         }
     }
+}
+
+fun signInKakao(context: Context) {
+    if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
+        UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
+            handleKakaoLoginResult(token, error, context)
+        }
+    } else {
+        UserApiClient.instance.loginWithKakaoAccount(context) { token, error ->
+            handleKakaoLoginResult(token, error, context)
+        }
+    }
+}
+
+private fun handleKakaoLoginResult(token: OAuthToken?, error: Throwable?, context: Context) {
+    if (error != null) {
+        Log.e("KakaoLogin", "카카오 로그인 실패", error)
+        return
+    }
+
+    if (token != null) {
+        UserApiClient.instance.me { user, userError ->
+            if (userError != null) {
+                Log.e("KakaoLogin", "사용자 정보 요청 실패", userError)
+                return@me
+            }
+
+            val aka = user?.kakaoAccount?.profile?.nickname ?: "사용자"
+            val email = user?.kakaoAccount?.email ?: "noemail@kakao.com"
+
+            FirebaseAuth.getInstance().signInAnonymously()
+                .addOnSuccessListener {
+                    saveOAuthUserToFirebase(
+                        aka = aka,
+                        email = email,
+                        from = "kakao",
+                        onSuccess = {
+                            Log.d("KakaoLogin", "카카오 로그인 성공: ${token.accessToken}")
+                            val intent = Intent(context, MainActivity::class.java)
+                            context.startActivity(intent)
+                            if (context is LoginActivity) {
+                                context.finish()
+                            }
+                        },
+                        onFailure = {
+                            Log.e("KakaoLogin", "Firestore 저장 실패", it)
+                        }
+                    )
+                }
+        }
+    }
+}
+
+fun signInNaver(context: Context) {
+    NaverIdLoginSDK.authenticate(context, object : OAuthLoginCallback {
+        override fun onSuccess() {
+            NidOAuthLogin().callProfileApi(object : NidProfileCallback<NidProfileResponse> {
+                override fun onSuccess(result: NidProfileResponse) {
+                    val response = result.profile
+                    val aka = response?.nickname ?: "네이버"
+                    val email = response?.email ?: "noemail@naver.com"
+
+                    FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener {
+                        saveOAuthUserToFirebase(aka, email, "naver", {
+                            Log.d("NaverLogin", "네이버 로그인 성공")
+                            val intent = Intent(context, MainActivity::class.java)
+                            context.startActivity(intent)
+                        }, {
+                            Log.e("NaverLogin", "Naver: Firestore 저장 실패", it)
+                        })
+                    }
+                }
+
+                override fun onError(errorCode: Int, message: String) {
+                    Log.e("NaverLogin", "프로필 불러오기 에러: $message")
+                }
+
+                override fun onFailure(httpStatus: Int, message: String) {
+                    Log.e("NaverLogin", "프로필 불러오기 실패: $message")
+                }
+            })
+        }
+
+        override fun onFailure(httpStatus: Int, message: String) {
+            Log.e("NaverLogin", "네이버 로그인 실패: $message")
+        }
+
+        override fun onError(errorCode: Int, message: String) {
+            Log.e("NaverLogin", "네이버 로그인 에러: $message")
+        }
+    })
+}
+
+fun initNaver(context: Context) {
+    NaverIdLoginSDK.initialize(
+        context,
+        context.getString(R.string.naver_client_id),
+        context.getString(R.string.naver_secret_id),
+        context.getString(R.string.app_name),
+    )
+}
+
+fun saveOAuthUserToFirebase(
+    aka: String,
+    email: String,
+    from: String,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("user")
+        .whereEqualTo("email", email)
+        .get()
+        .addOnSuccessListener { result ->
+            val uid = if (!result.isEmpty) {
+                result.documents[0].id
+            } else {
+                FirebaseAuth.getInstance().currentUser?.uid
+            }
+            if (uid == null) {
+                onFailure(Exception("UID 없음"))
+                return@addOnSuccessListener
+            }
+
+            val user = hashMapOf(
+                "aka" to aka,
+                "email" to email,
+                "provider" to from,
+            )
+            db.collection("user").document(uid)
+                .set(user)
+                .addOnSuccessListener { onSuccess() }
+                .addOnFailureListener { e -> onFailure(e) }
+        }
+        .addOnFailureListener { e -> onFailure(e) }
 }
