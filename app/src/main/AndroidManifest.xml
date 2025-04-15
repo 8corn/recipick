@@ -57,6 +57,7 @@
             android:name=".join.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Capstone" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

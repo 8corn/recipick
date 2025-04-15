@@ -49,7 +49,6 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.kakao.all)
     implementation(libs.naver.login)
-    implementation(libs.naver.profile)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

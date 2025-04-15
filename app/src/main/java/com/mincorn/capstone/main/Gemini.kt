@@ -13,7 +13,7 @@ object Gemini {
     fun init(context: Context) {
         val apiKey = context.getString(R.string.gemini)
         generativeModel = GenerativeModel(
-            modelName = "gemini-pro",
+            modelName = "gemini-pro-vision",
             apiKey = apiKey
         )
     }

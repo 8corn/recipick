@@ -2,6 +2,7 @@ package com.mincorn.capstone.join
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -35,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,13 +61,14 @@ class JoinActivity : ComponentActivity() {
 fun Join() {
     val (aka, setAka) = remember { mutableStateOf("") }
     val (id, setId) = remember { mutableStateOf("") }
+    val (idErrorText, setIdErrorText) = remember { mutableStateOf<String?>(null) }
     val (pw, setPw) = remember { mutableStateOf("") }
     val (pwCheck, setPwCheck) = remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val (pwErrorText, setPwErrorText) = remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
-    Surface (
+    Surface(
         color = Color.White
     ) {
         Column(
@@ -125,7 +128,7 @@ fun Join() {
                     )
                 )
                 Text(
-                    text = "아이디",
+                    text = "이메일",
                     fontSize = 15.sp,
                     color = Color(0xFF868686),
                     modifier = Modifier
@@ -133,12 +136,21 @@ fun Join() {
                 )
                 TextField(
                     value = id,
-                    onValueChange = setId,
+                    onValueChange = {
+                        setId(it)
+                        setIdErrorText(
+                            if (isValidEmail(it)) null else "올바른 이메일 형식이 아닙니다."
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp)
                         .padding(top = 2.dp)
-                        .border(1.dp, Color(0xFF868686), RoundedCornerShape(19.dp)),
+                        .border(
+                            1.dp,
+                            if (idErrorText != null) Color.Red else Color(0xFF868686),
+                            RoundedCornerShape(19.dp)
+                        ),
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
@@ -149,6 +161,14 @@ fun Join() {
                         unfocusedIndicatorColor = Color.Transparent,
                     )
                 )
+                if (idErrorText != null) {
+                    Text(
+                        text = idErrorText,
+                        color = Color.Red,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(top = 4.dp, start = 10.dp)
+                    )
+                }
                 Text(
                     text = "비밀번호",
                     fontSize = 15.sp,
@@ -159,6 +179,7 @@ fun Join() {
                 TextField(
                     value = pw,
                     onValueChange = setPw,
+                    visualTransformation = PasswordVisualTransformation('\u2022'),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp)
@@ -183,6 +204,7 @@ fun Join() {
                 )
                 TextField(
                     value = pwCheck,
+                    visualTransformation = PasswordVisualTransformation('\u2022'),
                     onValueChange = {
                         setPwCheck(it)
                         setPwErrorText(if (pw != it) "비밀번호가 일치하지 않습니다." else null)
@@ -191,7 +213,11 @@ fun Join() {
                         .fillMaxWidth()
                         .height(60.dp)
                         .padding(top = 2.dp)
-                        .border(1.dp, if (pwErrorText != null) Color.Red else Color(0xFF868686), RoundedCornerShape(19.dp)),
+                        .border(
+                            1.dp,
+                            if (pwErrorText != null) Color.Red else Color(0xFF868686),
+                            RoundedCornerShape(19.dp)
+                        ),
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
@@ -232,14 +258,28 @@ fun Join() {
                     ) {
                         Button(
                             onClick = {
-                                saveUserToFirebase(aka, id, pw, onSuccess = {
-                                    keyboardController?.hide()
-                                    Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-                                    val intent = Intent(context, MainActivity::class.java)
-                                    context.startActivity(intent)
-                                },
+                                keyboardController?.hide()
+                                if (!isValidEmail(id)) {
+                                    setIdErrorText("올바른 이메일 형식이 아닙니다.")
+                                    Toast.makeText(context, "이메일을 올바르게 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+
+                                if (pw != pwCheck) {
+                                    setPwErrorText("비밀번호가 일치하지 않습니다.")
+                                    Toast.makeText(context, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+
+                                saveUserToFirebase(aka, id, pw,
+                                    onSuccess = {
+                                        Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                                        val intent = Intent(context, MainActivity::class.java)
+                                        context.startActivity(intent)
+                                    },
                                     onFailure = { e ->
                                         Toast.makeText(context, "회원가입에 실패하였습니다. ${e.message}", Toast.LENGTH_LONG).show()
+                                        Log.e("Join", "회원가입 실패", e)
                                     }
                                 )
                             },
@@ -267,14 +307,24 @@ fun Join() {
     }
 }
 
-fun saveUserToFirebase(aka: String, id: String, pw: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+fun isValidEmail(email: String): Boolean {
+    return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+fun saveUserToFirebase(
+    aka: String,
+    id: String,
+    pw: String,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
     val db = Firebase.firestore
     db.collection("user")
         .whereEqualTo("id", id)
         .get()
         .addOnSuccessListener { result ->
             if (!result.isEmpty) {
-                onFailure(Exception("이미 사용중인 아이디입니다."))
+                onFailure(Exception("이미 사용중인 이메일입니다."))
             } else {
                 val uid = System.currentTimeMillis().toString()
                 val user = hashMapOf(

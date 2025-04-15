@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,16 +48,17 @@ fun Pick(pickName: String) {
     val result = remember { mutableStateOf("불러오는 중...") }
 
     LaunchedEffect(pickName) {
-        val response = Gemini.generateText("$pickName 만드는 재료와 레시피를 알려줘.")
+        val prompt = """
+            $pickName 를 만들기 위해 필요한 재료를 먼저 알려주고,
+            그 다음 줄부터는 그 재료를 사용한 요리 방법(레시피)를 설명해줘,
+            줄 바꿈을 사용해서 재료와 레시피를 나워서 작성해줘.
+        """.trimIndent()
+        val response = Gemini.generateText(prompt)
         result.value = response
     }
 
-//    val lines = result.value.lines()
-//    val ingredients = lines.firstOrNull() ?: ""
-//    val recipe = lines.drop(1).joinToString("\n")
-
     val (ingredients, recipe) = result.value.split("\n", limit = 2).let {
-        if (it.size >= 2) it[0] to it[1] else it [0] to ""
+        if (it.size >= 2) it[0] to it[1] else it[0] to ""
     }
 
     Surface(
@@ -125,6 +127,8 @@ fun Pick(pickName: String) {
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(vertical = 4.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
 
                 Text(
@@ -144,6 +148,8 @@ fun Pick(pickName: String) {
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(vertical = 4.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
         }

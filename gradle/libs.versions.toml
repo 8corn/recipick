@@ -50,7 +50,6 @@ firebase-firestore-ktx = {group = "com.google.firebase", name = "firebase-firest
 generativeai = {group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai"}
 kakao-all = {group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao-all"}
 naver-login = {group = "com.navercorp.nid", name = "oauth", version.ref = "naver-login"}
-naver-profile = {group = "com.anvercorp.nid", name = "profile", version.ref = "naver-login"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

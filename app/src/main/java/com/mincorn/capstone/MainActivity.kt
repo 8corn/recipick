@@ -28,6 +28,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +46,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.mincorn.capstone.main.Gemini
 import com.mincorn.capstone.main.TypeDetailScreen
 import com.mincorn.capstone.recipick.PickRecipick
 
@@ -99,7 +104,6 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 fun HomeScreen() {
     val types = listOf(
@@ -117,7 +121,7 @@ fun HomeScreen() {
     val context = LocalContext.current
 
     Surface(
-        contentColor = Color.White
+        color = Color.White
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -189,13 +193,31 @@ fun HomeScreen() {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
 fun SearchScreen() {
-    val recipes = listOf(
-        Recipe("제육볶음", "간단한 최고의 반찬", R.drawable.vmon),
-        Recipe("카레", "남은 음식 다 가져와", R.drawable.vmon),
-        Recipe("라멘", "어후 맛있겠다", R.drawable.vmon),
-    )
+//    val recipes = listOf(
+//        Recipe("제육볶음", "간단한 최고의 반찬", R.drawable.vmon),
+//        Recipe("카레", "남은 음식 다 가져와", R.drawable.vmon),
+//        Recipe("라멘", "어후 맛있겠다", R.drawable.vmon),
+//    )
+
+    val recipes = remember { mutableStateListOf<Recipe>() }
+    val ingredients = listOf("돼지고기", "양파", "고추장")       // 나중에 바꿔야 함
+
+    LaunchedEffect(Unit) {
+        val prompt = "${ingredients.joinToString { ", " }}로 만들 수 있는 요리 5가지 추천해줘. 각 요리는 이름과 간단한 설명이 포함되어야 해."
+        val response = Gemini.generateText(prompt)
+        val lines = response.lines().filter { it.isNotBlank() }
+
+        recipes.clear()
+        for (line in lines) {
+            val parts = line.split(":").map { it.trim() }
+            if (parts.size == 2) {
+                recipes.add(Recipe(parts[0], parts[1], R.drawable.vmon))
+            }
+        }
+    }
 
     val context = LocalContext.current
 

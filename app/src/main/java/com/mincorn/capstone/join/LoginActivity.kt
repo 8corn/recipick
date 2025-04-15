@@ -1,11 +1,11 @@
 package com.mincorn.capstone.join
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,17 +21,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -49,6 +49,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.OAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
@@ -92,6 +95,7 @@ fun Login() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 30.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -111,7 +115,7 @@ fun Login() {
             TextField(
                 value = id,
                 onValueChange = setId,
-                placeholder = { Text("아이디를 입력해주세요.") },
+                placeholder = { Text("이메일을 입력해주세요.") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(63.dp)
@@ -156,7 +160,7 @@ fun Login() {
                 onClick = {
                     keyboardController?.hide()
                     FirebaseAuth.getInstance()
-                        .signInWithEmailAndPassword(id, pw)
+                        .signInWithEmailAndPassword(id.trim(), pw.trim())
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 val intent = Intent(context, MainActivity::class.java)
@@ -166,6 +170,14 @@ fun Login() {
                                 }
                             } else {
                                 isFailState.value = true
+                                val errorMessage = when (val e = task.exception) {
+                                    is FirebaseAuthInvalidUserException -> "존재하지 않는 계정입니다."
+                                    is FirebaseAuthInvalidCredentialsException -> "이메일 또는 비밀번호가 잘못되었습니다."
+                                    else -> e?.localizedMessage ?: "로그인에 실패하였습니다."
+                                }
+
+                                Log.e("Login", "로그인 실패: ${task.exception?.message}", task.exception)
+                                Toast.makeText(context, "로그인에 실패하였습니다.", Toast.LENGTH_SHORT).show()
                             }
                         }
                 },
@@ -272,6 +284,26 @@ private fun handleKakaoLoginResult(token: OAuthToken?, error: Throwable?, contex
             val aka = user?.kakaoAccount?.profile?.nickname ?: "사용자"
             val email = user?.kakaoAccount?.email ?: "noemail@kakao.com"
 
+            val uid = email.hashCode().toString()
+            val db = FirebaseFirestore.getInstance()
+
+            db.collection("user").document(uid).get()
+                .addOnSuccessListener { document ->
+                    if (!document.exists()) {
+                        val users = hashMapOf(
+                            "aka" to aka,
+                            "email" to email,
+                            "provider" to "kakao"
+                        )
+                        db.collection("user").document(uid).set(users)
+                            .addOnSuccessListener {
+                                Log.d("KakaoLogin", "카카오 Firestore 저장 성공")
+                            }
+                            .addOnFailureListener {
+                                Log.e("KakaoLogin", "카카오 Firestore 저장 실패", it)
+                            }
+                    }
+                }
             FirebaseAuth.getInstance().signInAnonymously()
                 .addOnSuccessListener {
                     saveOAuthUserToFirebase(
@@ -279,7 +311,7 @@ private fun handleKakaoLoginResult(token: OAuthToken?, error: Throwable?, contex
                         email = email,
                         from = "kakao",
                         onSuccess = {
-                            Log.d("KakaoLogin", "카카오 로그인 성공: ${token.accessToken}")
+                            Log.d("KakaoLogin", "카카오 로그인 성공 (익명 + Firestore")
                             val intent = Intent(context, MainActivity::class.java)
                             context.startActivity(intent)
                             if (context is LoginActivity) {
@@ -290,6 +322,10 @@ private fun handleKakaoLoginResult(token: OAuthToken?, error: Throwable?, contex
                             Log.e("KakaoLogin", "Firestore 저장 실패", it)
                         }
                     )
+                }
+                .addOnFailureListener { e ->
+                    Log.e("KakaoLogin", "Firebase 익명 로그인 실패", e)
+                    Toast.makeText(context, "네트워크 상태가 불안정합니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_LONG).show()
                 }
         }
     }
@@ -304,19 +340,50 @@ fun signInNaver(context: Context) {
                     val aka = response?.nickname ?: "네이버"
                     val email = response?.email ?: "noemail@naver.com"
 
-                    FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener {
-                        saveOAuthUserToFirebase(aka, email, "naver", {
-                            Log.d("NaverLogin", "네이버 로그인 성공")
-                            val intent = Intent(context, MainActivity::class.java)
-                            context.startActivity(intent)
-                        }, {
-                            Log.e("NaverLogin", "Naver: Firestore 저장 실패", it)
-                        })
-                    }
+                    val uid = email.hashCode().toString()
+                    val db = FirebaseFirestore.getInstance()
+
+                    db.collection("user").document(uid).get()
+                        .addOnSuccessListener { document ->
+                            if (!document.exists()) {
+                                val user = hashMapOf(
+                                    "aka" to aka,
+                                    "email" to email,
+                                    "provider" to "naver"
+                                )
+                                db.collection("user").document(uid).set(user)
+                                    .addOnSuccessListener {
+                                        Log.d("NaverLogin", "네이버 회원가입 성공")
+                                        val intent = Intent(context, MainActivity::class.java)
+                                        context.startActivity(intent)
+                                        if (context is LoginActivity) {
+                                            context.finish()
+                                        }
+                                    }
+                                    .addOnFailureListener {
+                                        Log.e("NaverLogin", "Firebase 접근 실패", it)
+                                    }
+                            }
+                        }
+
+                    FirebaseAuth.getInstance().signInAnonymously()
+                        .addOnSuccessListener {
+                            saveOAuthUserToFirebase(aka, email, "naver", {
+                                Log.d("NaverLogin", "네이버 로그인 성공")
+                                val intent = Intent(context, MainActivity::class.java)
+                                context.startActivity(intent)
+                                if (context is LoginActivity) {
+                                    context.finish()
+                                }
+                            }, {
+                                Log.e("NaverLogin", "Naver: Firestore 저장 실패", it)
+                            })
+                        }
                 }
 
                 override fun onError(errorCode: Int, message: String) {
                     Log.e("NaverLogin", "프로필 불러오기 에러: $message")
+                    Toast.makeText(context, "네트워크 상태가 불안정합니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_LONG).show()
                 }
 
                 override fun onFailure(httpStatus: Int, message: String) {
@@ -331,6 +398,7 @@ fun signInNaver(context: Context) {
 
         override fun onError(errorCode: Int, message: String) {
             Log.e("NaverLogin", "네이버 로그인 에러: $message")
+            Toast.makeText(context, "네트워크 상태가 불안정합니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_LONG).show()
         }
     })
 }
