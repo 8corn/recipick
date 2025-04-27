@@ -176,8 +176,8 @@ fun Login() {
                                     else -> e?.localizedMessage ?: "로그인에 실패하였습니다."
                                 }
 
-                                Log.e("Login", "로그인 실패: ${task.exception?.message}", task.exception)
-                                Toast.makeText(context, "로그인에 실패하였습니다.", Toast.LENGTH_SHORT).show()
+                                Log.e("Login", "로그인 실패: $errorMessage", task.exception)
+                                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                             }
                         }
                 },

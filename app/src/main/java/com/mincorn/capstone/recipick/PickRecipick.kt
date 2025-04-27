@@ -1,16 +1,21 @@
 package com.mincorn.capstone.recipick
 
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -22,13 +27,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.R
+import com.mincorn.capstone.RecipeStorage
+import com.mincorn.capstone.SavedRecipe
 import com.mincorn.capstone.main.Gemini
 
 class PickRecipick : ComponentActivity() {
@@ -46,6 +56,7 @@ class PickRecipick : ComponentActivity() {
 @Composable
 fun Pick(pickName: String) {
     val result = remember { mutableStateOf("불러오는 중...") }
+    val context = LocalContext.current
 
     LaunchedEffect(pickName) {
         val prompt = """
@@ -54,6 +65,7 @@ fun Pick(pickName: String) {
             줄 바꿈을 사용해서 재료와 레시피를 나워서 작성해줘.
         """.trimIndent()
         val response = Gemini.generateText(prompt)
+        Log.d("PickRecipick", "response: $response")
         result.value = response
     }
 
@@ -65,12 +77,14 @@ fun Pick(pickName: String) {
         color = Color.White
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 30.dp)
+                    .padding(top = 38.dp)
             ) {
                 Text(
                     text = pickName,
@@ -87,6 +101,24 @@ fun Pick(pickName: String) {
                         .align(Alignment.CenterEnd)
                         .padding(end = 13.dp)
                         .size(24.dp)
+                        .clickable {
+                            val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+                            if (uid != null) {
+                                saveRecipeToFirebase(
+                                    uid,
+                                    SavedRecipe(
+                                        name = pickName,
+                                        ingredients = "재료",
+                                        recipe = "레시피 설명",
+                                        image = R.drawable.vmon,
+
+                                    )
+                                )
+                            }
+                            RecipeStorage.add(SavedRecipe(pickName, ingredients, recipe, R.drawable.vmon))
+                            Toast.makeText(context, "저장공간에 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
                 )
             }
 
@@ -156,8 +188,41 @@ fun Pick(pickName: String) {
     }
 }
 
+fun saveRecipeToFirebase (uid: String, recipes: SavedRecipe) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("user")
+        .document(uid)
+        .collection("storage")
+        .add(recipes)
+        .addOnSuccessListener {
+            Log.d("Firebase", "레시피 저장 성공")
+        }
+        .addOnFailureListener {
+            Log.e("Firebase", "레시피 저장 실패", it)
+        }
+}
+
+fun loadSavedRecipeFromFirebase (uid: String, onComplete: (List<SavedRecipe>) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("user")
+        .document(uid)
+        .collection("storage")
+        .get()
+        .addOnSuccessListener { result ->
+            val recipes = result.mapNotNull { doc ->
+                doc.toObject(SavedRecipe::class.java)
+            }
+            onComplete(recipes)
+        }
+        .addOnFailureListener {
+            Log.e("Firebase", "레시피 불러오기 실패", it)
+            onComplete(emptyList())
+        }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     Pick(pickName = "제육볶음")
 }
+

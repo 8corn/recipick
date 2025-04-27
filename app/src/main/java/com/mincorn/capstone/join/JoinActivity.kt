@@ -77,7 +77,7 @@ fun Join() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 30.dp)
+                    .padding(top = 38.dp)
             ) {
                 Text(
                     text = "회원가입",
