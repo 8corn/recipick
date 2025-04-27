@@ -38,9 +38,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -63,8 +62,8 @@ import com.mincorn.capstone.main.TypeDetail
 import com.mincorn.capstone.main.TypeDetailScreen
 import com.mincorn.capstone.recipick.PickRecipick
 import com.mincorn.capstone.recipick.SearchRecipick
-import com.mincorn.capstone.recipick.loadSavedRecipeFromFirebase
-import kotlinx.coroutines.launch
+import com.mincorn.capstone.viewmodel.SearchViewModel
+import com.mincorn.capstone.viewmodel.StorageViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -250,62 +249,21 @@ fun HomeScreen() {
 @Preview(showBackground = true)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen() {
-    val recipes = remember { mutableStateListOf<Recipe>() }
+fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
+    val recipes = viewModel.recipes
     val context = LocalContext.current
-    val isRefreshing = remember { mutableStateOf(false) }
-
-    val ingredients = listOf("돼지고기", "양파", "고추장")       // 나중에 바꿔야 함
+    val isRefreshing = viewModel.isRefreshing
 
     val pullToRefreshState = rememberPullToRefreshState()
-    val coroutineScope = rememberCoroutineScope()
-
-    suspend fun loadRecipes() {
-        isRefreshing.value = true
-
-        val prompt = """
-            재료 : ${ingredients.joinToString { ", " }}
-            이 재료들을 가지고 요리를 추천 해줘
-            근데 각 요리는 다음과 같은 형식으로 알려줘:
-            [요리 이름] :  [간단한 설명]
-            예)
-             김치 볶음밥: 김치와 밥을 볶아 만든 기본적인 대표 볶음밥
-             된장찌개: 한국인 최고의 찌개
-            
-            이런 식으로 총 5개 이상 요리를 간단하게 추천해줘.
-        """.trimIndent()
-
-        val response = Gemini.generateText(prompt)
-        Log.d("GeminiResult", "response: $response")
-
-        val lines = response.lines().filter { it.contains(":") }
-
-        recipes.clear()
-        for (line in lines) {
-            val parts = line.split(":").map { it.trim() }
-            if (parts.size == 2) {
-                recipes.add(Recipe(parts[0], parts[1], R.drawable.vmon))
-            }
-        }
-        isRefreshing.value = false
-    }
-
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            loadRecipes()
-        }
-    }
 
     Surface (
         modifier = Modifier
             .fillMaxSize()
             .pullToRefresh(
                 state = pullToRefreshState,
-                isRefreshing = isRefreshing.value,
+                isRefreshing = isRefreshing,
                 onRefresh = {
-                    coroutineScope.launch {
-                        loadRecipes()
-                    }
+                    viewModel.loadRecipes()
                 }
             ),
         color = Color.White
@@ -349,11 +307,9 @@ fun SearchScreen() {
             )
 
             PullToRefreshBox(
-                isRefreshing = isRefreshing.value,
+                isRefreshing = isRefreshing,
                 onRefresh = {
-                    coroutineScope.launch {
-                        loadRecipes()
-                    }
+                    viewModel.loadRecipes()
                 },
                 state = pullToRefreshState,
                 modifier = Modifier.fillMaxSize()
@@ -394,18 +350,8 @@ fun SearchScreen() {
 }
 
 @Composable
-fun StorageScreen() {
-    val savedRecipe = remember { mutableStateListOf<SavedRecipe>() }
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
-
-    LaunchedEffect(uid) {
-        if (uid != null) {
-            loadSavedRecipeFromFirebase(uid) { loaded ->
-                savedRecipe.clear()
-                savedRecipe.addAll(loaded)
-            }
-        }
-    }
+fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
+    val savedRecipe = viewModel.savedRecipes
 
     Surface (
         color = Color.White

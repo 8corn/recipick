@@ -109,8 +109,8 @@ fun Pick(pickName: String) {
                                     uid,
                                     SavedRecipe(
                                         name = pickName,
-                                        ingredients = "재료",
-                                        recipe = "레시피 설명",
+                                        ingredients = ingredients,
+                                        recipe = recipe,
                                         image = R.drawable.vmon,
 
                                     )
