@@ -1,5 +1,6 @@
 package com.mincorn.capstone
 
+import android.app.Application
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -49,12 +50,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.main.Gemini
@@ -62,6 +65,7 @@ import com.mincorn.capstone.main.TypeDetail
 import com.mincorn.capstone.main.TypeDetailScreen
 import com.mincorn.capstone.recipick.PickRecipick
 import com.mincorn.capstone.recipick.SearchRecipick
+import com.mincorn.capstone.recipick.loadSavedRecipeFromFirebase
 import com.mincorn.capstone.viewmodel.SearchViewModel
 import com.mincorn.capstone.viewmodel.StorageViewModel
 
@@ -249,9 +253,14 @@ fun HomeScreen() {
 @Preview(showBackground = true)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
-    val recipes = viewModel.recipes
+fun SearchScreen() {
     val context = LocalContext.current
+
+    val viewModel: SearchViewModel = viewModel(
+        factory = ViewModelProvider.AndroidViewModelFactory.getInstance(context.applicationContext as Application)
+    )
+
+    val recipes = viewModel.recipes
     val isRefreshing = viewModel.isRefreshing
 
     val pullToRefreshState = rememberPullToRefreshState()
@@ -330,8 +339,8 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
                                     context.startActivity(intent)
                                 }
                         ) {
-                            Image(
-                                painter = painterResource(id = recipe.image),
+                            AsyncImage(
+                                model = recipe.image,
                                 contentDescription = recipe.name,
                                 modifier = Modifier.size(64.dp),
                             )
@@ -351,6 +360,18 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
 
 @Composable
 fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
+    val context = LocalContext.current
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            loadSavedRecipeFromFirebase(uid) { recipes ->
+                RecipeStorage.savedRecipes.clear()
+                RecipeStorage.savedRecipes.addAll(recipes)
+            }
+        }
+    }
+
     val savedRecipe = viewModel.savedRecipes
 
     Surface (
@@ -427,8 +448,8 @@ fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
                                     .fillMaxWidth()
                                     .padding(8.dp)
                             ) {
-                                Image(
-                                    painter = painterResource(id = recipe.image),
+                                AsyncImage(
+                                    model = recipe.image,
                                     contentDescription = recipe.name,
                                     modifier = Modifier.size(64.dp),
                                 )
@@ -478,8 +499,8 @@ fun deleteRecipeFromFirebase(uid: String, recipe: SavedRecipe) {
 
 data class NavigationItem(val route: String, val icon: Int, val label: String)
 
-data class Recipe(val name: String, val description: String, val image: Int)
+data class Recipe(val name: String, val description: String, val image: String)
 
 data class Type(val image: Int, val name: String)
 
-data class SavedRecipe (val name: String, val ingredients: String, val recipe: String, val image: Int)
+data class SavedRecipe (val name: String, val ingredients: String, val recipe: String, val image: String)

@@ -1,17 +1,23 @@
 package com.mincorn.capstone.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.mincorn.capstone.R
 import com.mincorn.capstone.Recipe
 import com.mincorn.capstone.main.Gemini
+import com.mincorn.capstone.other.RetrofitInstance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class SearchViewModel : ViewModel() {
+class SearchViewModel(application: Application) : AndroidViewModel(application) {
+    val accessKey = application.getString(R.string.unsplash_access_key)
+
     var recipes = mutableStateListOf<Recipe>()
         private set
 
@@ -50,7 +56,20 @@ class SearchViewModel : ViewModel() {
             for (line in lines) {
                 val parts = line.split(":").map { it.trim() }
                 if (parts.size == 2) {
-                    recipes.add(Recipe(parts[0], parts[1], com.mincorn.capstone.R.drawable.vmon))
+                    val name = parts[0]
+                    val description = parts[1]
+
+                    val imageUrl = try {
+                        val unsplashResponse = withContext(Dispatchers.IO) {
+                            RetrofitInstance.api.searchPhotos(name, accessKey)
+                        }
+                        unsplashResponse.results.firstOrNull()?.urls?.small ?: ""
+                    } catch (e: Exception) {
+                        print("이미지 불러오기 실해 $e")
+                        ""
+                    }
+
+                    recipes.add(Recipe(name, description, imageUrl))
                 }
             }
             isRefreshing = false
