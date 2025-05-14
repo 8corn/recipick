@@ -10,7 +10,7 @@ data class UnsplashPhoto(val urls: Urls)
 data class Urls(val small: String, val full: String)
 
 interface UnsplashApi {
-    @GET("search/photo")
+    @GET("search/photos")
     suspend fun searchPhotos(
         @Query("query") query: String,
         @Query("client_id") clientId: String

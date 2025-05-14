@@ -1,6 +1,7 @@
 package com.mincorn.capstone.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -14,9 +15,10 @@ import com.mincorn.capstone.other.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
 class SearchViewModel(application: Application) : AndroidViewModel(application) {
-    val accessKey = application.getString(R.string.unsplash_access_key)
+    private val accessKey = application.getString(R.string.unsplash_access_key)
 
     var recipes = mutableStateListOf<Recipe>()
         private set
@@ -59,13 +61,27 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                     val name = parts[0]
                     val description = parts[1]
 
+                    val translatePrompt = """
+                        "$name" 이라는 요리 이름을 영어 단어로만 짧고 간단하게 번역해줘.
+                        예) 김치찌개 -> kimchi stew
+                        예) 제육볶음 -> spicy pork stir-fry
+                        결과는 영어로만 출력해줘.
+                    """.trimIndent()
+
+                    val translatedName = Gemini.generateText(translatePrompt).trim()
+                    Log.d("SearchViewModel", "영어 번역 결과: $translatedName")
+
                     val imageUrl = try {
+                        val searchQuery = "$translatedName food dish -person -people -portrait"
+                        val encodedName = URLEncoder.encode(searchQuery, "UTF-8")
                         val unsplashResponse = withContext(Dispatchers.IO) {
-                            RetrofitInstance.api.searchPhotos(name, accessKey)
+                            RetrofitInstance.api.searchPhotos(encodedName, accessKey)
                         }
-                        unsplashResponse.results.firstOrNull()?.urls?.small ?: ""
+                        val randomImage = unsplashResponse.results.randomOrNull()
+                        randomImage?.urls?.small ?: ""
+
                     } catch (e: Exception) {
-                        print("이미지 불러오기 실해 $e")
+                        Log.e("SearchViewModel", "이미지 불러오기 실패", e)
                         ""
                     }
 

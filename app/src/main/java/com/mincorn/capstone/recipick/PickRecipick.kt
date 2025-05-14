@@ -75,7 +75,8 @@ fun Pick(pickName: String) {
         Log.d("PickRecipick", "영어 번역 결과: $translated")
 
         try {
-            val encodedName = URLEncoder.encode(translated, "UTF-8")
+            val searchQuery = "$translated food dish -person -people -portrait"
+            val encodedName = URLEncoder.encode(searchQuery, "UTF-8")
             val unsplashResponse = withContext(Dispatchers.IO) {
                 RetrofitInstance.api.searchPhotos(encodedName, context.getString(R.string.unsplash_access_key))
             }
@@ -88,7 +89,7 @@ fun Pick(pickName: String) {
         val prompt = """
             $pickName 을 만들기 위해 필요한 재료를 먼저 알려주고,
             그 다음 줄부터는 그 재료를 사용한 요리 방법(레시피)를 설명해줘,
-            줄 바꿈을 사용해서 재료와 레시피를 나워서 작성해줘.
+            줄 바꿈을 사용해서 재료와 레시피를 나눠서 작성해줘.
         """.trimIndent()
 
         val response = Gemini.generateText(prompt)
