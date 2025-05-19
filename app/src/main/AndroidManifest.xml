@@ -16,6 +16,22 @@
         android:theme="@style/Theme.Capstone"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".main.MediaPipeCheck"
+            android:exported="false"
+            android:label="@string/title_activity_media_pipe_check"
+            android:theme="@style/Theme.Capstone" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity
             android:name=".recipick.SearchRecipick"
             android:exported="false"
             android:label="@string/title_activity_search_recipick"
@@ -52,7 +68,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".main.TypeDetailScreen"
+            android:name=".main.TypeDetail"
             android:exported="false"
             android:label="@string/title_activity_type_detail_screen"
             android:theme="@style/Theme.Capstone" />

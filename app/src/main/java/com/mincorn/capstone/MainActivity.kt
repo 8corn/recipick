@@ -2,10 +2,14 @@ package com.mincorn.capstone
 
 import android.app.Application
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,6 +43,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -61,13 +67,19 @@ import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.main.Gemini
-import com.mincorn.capstone.main.TypeDetail
 import com.mincorn.capstone.main.TypeDetailScreen
+import com.mincorn.capstone.main.TypeDetail
+import com.mincorn.capstone.other.getFileFromUri
+import com.mincorn.capstone.other.uploadImageToServer
 import com.mincorn.capstone.recipick.PickRecipick
 import com.mincorn.capstone.recipick.SearchRecipick
 import com.mincorn.capstone.recipick.loadSavedRecipeFromFirebase
 import com.mincorn.capstone.viewmodel.SearchViewModel
 import com.mincorn.capstone.viewmodel.StorageViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,7 +113,7 @@ fun Reciepick() {
             composable("storage") { StorageScreen() }
             composable("typeDetail/{typename}") { backStackEntry ->
                 val typeName = backStackEntry.arguments?.getString("typeName") ?: ""
-                TypeDetail(typeName)
+                TypeDetailScreen(typeName)
             }
         }
     }
@@ -176,6 +188,24 @@ fun HomeScreen() {
 
     val context = LocalContext.current
 
+    val photoUri = remember { mutableStateOf<Uri?>(null) }
+    val imageFile = remember { File(context.cacheDir, "capture_image.jpg") }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success && photoUri.value != null) {
+            val file = getFileFromUri(context, photoUri.value!!) ?: return@rememberLauncherForActivityResult
+
+            CoroutineScope(Dispatchers.IO).launch {
+                val response = uploadImageToServer(file, context)
+                Log.d("MediaPipe", response)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    Toast.makeText(context, response, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     Surface(
         color = Color.White
     ) {
@@ -202,7 +232,14 @@ fun HomeScreen() {
                         .align(Alignment.CenterEnd)
                         .padding(end = 13.dp)
                         .size(24.dp)
-                        .clickable { }
+                        .clickable {
+                            photoUri.value = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.provider",
+                                imageFile
+                            )
+                            photoUri.value?.let { takePictureLauncher.launch(it) }
+                        }
                 )
             }
 
@@ -226,7 +263,7 @@ fun HomeScreen() {
                                 .padding(14.dp)
                                 .fillMaxWidth()
                                 .clickable {
-                                    val intent = Intent(context, TypeDetailScreen::class.java)
+                                    val intent = Intent(context, TypeDetail::class.java)
                                     intent.putExtra("typeName", type.name)
                                     context.startActivity(intent)
                                 },
