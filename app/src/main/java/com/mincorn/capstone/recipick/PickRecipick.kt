@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,12 +33,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.R
 import com.mincorn.capstone.RecipeStorage
 import com.mincorn.capstone.SavedRecipe
 import com.mincorn.capstone.main.Gemini
+import com.mincorn.capstone.other.RetrofitInstance
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
 class PickRecipick : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,14 +60,38 @@ class PickRecipick : ComponentActivity() {
 @Composable
 fun Pick(pickName: String) {
     val result = remember { mutableStateOf("불러오는 중...") }
+    val imageUrl = remember { mutableStateOf("") }
     val context = LocalContext.current
 
     LaunchedEffect(pickName) {
-        val prompt = """
-            $pickName 를 만들기 위해 필요한 재료를 먼저 알려주고,
-            그 다음 줄부터는 그 재료를 사용한 요리 방법(레시피)를 설명해줘,
-            줄 바꿈을 사용해서 재료와 레시피를 나워서 작성해줘.
+        val translatePrompt = """
+            "$pickName" 라는 요리 이름을 영어 단어로만 짧고 간단하게 번역해줘. 
+            예) 김치찌개 → kimchi stew
+            예) 제육볶음 → spicy pork stir-fry
+            결과는 영어로만 출력해줘.
         """.trimIndent()
+
+        val translated = Gemini.generateText(translatePrompt).trim()
+        Log.d("PickRecipick", "영어 번역 결과: $translated")
+
+        try {
+            val searchQuery = "$translated food dish -person -people -portrait"
+            val encodedName = URLEncoder.encode(searchQuery, "UTF-8")
+            val unsplashResponse = withContext(Dispatchers.IO) {
+                RetrofitInstance.api.searchPhotos(encodedName, context.getString(R.string.unsplash_access_key))
+            }
+            imageUrl.value = unsplashResponse.results.firstOrNull()?.urls?.small ?: ""
+        } catch (e: Exception) {
+            Log.e("PickRecipick", "이미지 로드 실패", e)
+            imageUrl.value = ""
+        }
+
+        val prompt = """
+            $pickName 을 만들기 위해 필요한 재료를 먼저 알려주고,
+            그 다음 줄부터는 그 재료를 사용한 요리 방법(레시피)를 설명해줘,
+            줄 바꿈을 사용해서 재료와 레시피를 나눠서 작성해줘.
+        """.trimIndent()
+
         val response = Gemini.generateText(prompt)
         Log.d("PickRecipick", "response: $response")
         result.value = response
@@ -105,19 +133,16 @@ fun Pick(pickName: String) {
                             val uid = FirebaseAuth.getInstance().currentUser?.uid
 
                             if (uid != null) {
-                                saveRecipeToFirebase(
-                                    uid,
-                                    SavedRecipe(
-                                        name = pickName,
-                                        ingredients = ingredients,
-                                        recipe = recipe,
-                                        image = R.drawable.vmon,
-
-                                    )
+                                val savedRecipe = SavedRecipe(
+                                    name = pickName,
+                                    ingredients = ingredients,
+                                    recipe = recipe,
+                                    image = imageUrl.value
                                 )
+                                saveRecipeToFirebase(uid, savedRecipe)
+                                RecipeStorage.add(savedRecipe)
+                                Toast.makeText(context, "저장공간에 저장되었습니다.", Toast.LENGTH_SHORT).show()
                             }
-                            RecipeStorage.add(SavedRecipe(pickName, ingredients, recipe, R.drawable.vmon))
-                            Toast.makeText(context, "저장공간에 저장되었습니다.", Toast.LENGTH_SHORT).show()
                         }
                 )
             }
@@ -133,9 +158,9 @@ fun Pick(pickName: String) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.vmon),
-                    contentDescription = "food image",
+                AsyncImage(
+                    model = imageUrl.value,
+                    contentDescription = "레시피 이미지",
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(vertical = 16.dp)
@@ -190,6 +215,7 @@ fun Pick(pickName: String) {
 
 fun saveRecipeToFirebase (uid: String, recipes: SavedRecipe) {
     val db = FirebaseFirestore.getInstance()
+
     db.collection("user")
         .document(uid)
         .collection("storage")

@@ -34,7 +34,7 @@ class StorageViewModel : ViewModel() {
                         val name = doc.getString("name")
                         val ingredients = doc.getString("ingredients")
                         val recipe = doc.getString("recipe")
-                        val image = (doc.getLong("image") ?: 0L).toInt()
+                        val image = doc.getString("image") ?: ""
 
                         if (name != null && ingredients != null && recipe != null) {
                             SavedRecipe(name, ingredients, recipe, image)

@@ -49,6 +49,9 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.kakao.all)
     implementation(libs.naver.login)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.okhttp.logging.interceptor)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

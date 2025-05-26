@@ -1,17 +1,25 @@
 package com.mincorn.capstone.viewmodel
 
+import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.mincorn.capstone.R
 import com.mincorn.capstone.Recipe
 import com.mincorn.capstone.main.Gemini
+import com.mincorn.capstone.other.RetrofitInstance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
-class SearchViewModel : ViewModel() {
+class SearchViewModel(application: Application) : AndroidViewModel(application) {
+    private val accessKey = application.getString(R.string.unsplash_access_key)
+
     var recipes = mutableStateListOf<Recipe>()
         private set
 
@@ -50,7 +58,34 @@ class SearchViewModel : ViewModel() {
             for (line in lines) {
                 val parts = line.split(":").map { it.trim() }
                 if (parts.size == 2) {
-                    recipes.add(Recipe(parts[0], parts[1], com.mincorn.capstone.R.drawable.vmon))
+                    val name = parts[0]
+                    val description = parts[1]
+
+                    val translatePrompt = """
+                        "$name" 이라는 요리 이름을 영어 단어로만 짧고 간단하게 번역해줘.
+                        예) 김치찌개 -> kimchi stew
+                        예) 제육볶음 -> spicy pork stir-fry
+                        결과는 영어로만 출력해줘.
+                    """.trimIndent()
+
+                    val translatedName = Gemini.generateText(translatePrompt).trim()
+                    Log.d("SearchViewModel", "영어 번역 결과: $translatedName")
+
+                    val imageUrl = try {
+                        val searchQuery = "$translatedName food dish -person -people -portrait"
+                        val encodedName = URLEncoder.encode(searchQuery, "UTF-8")
+                        val unsplashResponse = withContext(Dispatchers.IO) {
+                            RetrofitInstance.api.searchPhotos(encodedName, accessKey)
+                        }
+                        val randomImage = unsplashResponse.results.randomOrNull()
+                        randomImage?.urls?.small ?: ""
+
+                    } catch (e: Exception) {
+                        Log.e("SearchViewModel", "이미지 불러오기 실패", e)
+                        ""
+                    }
+
+                    recipes.add(Recipe(name, description, imageUrl))
                 }
             }
             isRefreshing = false
