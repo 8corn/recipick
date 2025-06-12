@@ -17,8 +17,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -111,9 +113,17 @@ fun Reciepick() {
             composable("home") { HomeScreen() }
             composable("search") { SearchScreen() }
             composable("storage") { StorageScreen() }
-            composable("typeDetail/{typename}") { backStackEntry ->
+            composable("typeDetail/{typeName}/{imageUri}/{name}/{count}") { backStackEntry ->
                 val typeName = backStackEntry.arguments?.getString("typeName") ?: ""
-                TypeDetailScreen(typeName)
+                val imageUri = backStackEntry.arguments?.getString("imageUri") ?: ""
+                val name = backStackEntry.arguments?.getString("name") ?: ""
+                val count = backStackEntry.arguments?.getString("count") ?: ""
+                TypeDetailScreen(
+                    typeName = typeName,
+                    imageUri = imageUri,
+                    name = name,
+                    count = count,
+                )
             }
         }
     }
@@ -172,18 +182,19 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
 fun HomeScreen() {
     val types = listOf(
-        Type(R.drawable.logo, "정육/계란"),
-        Type(R.drawable.logo, "채소"),
-        Type(R.drawable.logo, "과일"),
-        Type(R.drawable.logo, "수산"),
-        Type(R.drawable.logo, "간편식품"),
-        Type(R.drawable.logo, "조미료"),
-        Type(R.drawable.logo, "베이커리"),
-        Type(R.drawable.logo, "유제품"),
-        Type(R.drawable.logo, "기타"),
+        Type(R.drawable.meat, "정육/계란"),
+        Type(R.drawable.carrot, "채소"),
+        Type(R.drawable.fruit, "과일"),
+        Type(R.drawable.seafood, "수산"),
+        Type(R.drawable.burger, "간편식품"),
+        Type(R.drawable.sauce, "조미료"),
+        Type(R.drawable.bread, "베이커리"),
+        Type(R.drawable.milk, "유제품"),
+        Type(R.drawable.etc, "기타"),
     )
 
     val context = LocalContext.current
@@ -255,12 +266,13 @@ fun HomeScreen() {
                 columns = GridCells.Fixed(3),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(vertical = 80.dp),
+                    .padding(vertical = 150.dp),
                 content = {
                     items(types) { type ->
                         Column(
                             modifier = Modifier
                                 .padding(14.dp)
+                                .padding(bottom = 14.dp)
                                 .fillMaxWidth()
                                 .clickable {
                                     val intent = Intent(context, TypeDetail::class.java)
@@ -274,6 +286,8 @@ fun HomeScreen() {
                                 contentDescription = "타입 아이콘",
                                 modifier = Modifier.size(64.dp)
                             )
+
+                            Spacer(modifier = Modifier.height(7.dp))
                             Text(
                                 text = type.name,
                                 fontWeight = FontWeight.Bold,
@@ -287,7 +301,6 @@ fun HomeScreen() {
     }
 }
 
-@Preview(showBackground = true)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen() {
@@ -396,9 +409,10 @@ fun SearchScreen() {
 }
 
 @Composable
-fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
+fun StorageScreen() {
     val context = LocalContext.current
     val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val viewModel: StorageViewModel = viewModel()
 
     LaunchedEffect(uid) {
         if (uid != null) {
@@ -540,4 +554,4 @@ data class Recipe(val name: String, val description: String, val image: String)
 
 data class Type(val image: Int, val name: String)
 
-data class SavedRecipe (val name: String, val ingredients: String, val recipe: String, val image: String)
+data class SavedRecipe (val name: String = "", val ingredients: String = "", val recipe: String = "", val image: String = "")

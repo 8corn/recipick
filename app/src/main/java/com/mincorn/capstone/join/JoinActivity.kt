@@ -1,5 +1,6 @@
 package com.mincorn.capstone.join
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -42,6 +43,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.firestore
 import com.mincorn.capstone.MainActivity
 import com.mincorn.capstone.join.ui.theme.CapstoneTheme
@@ -109,6 +112,7 @@ fun Join() {
                     modifier = Modifier
                         .padding(top = 39.dp)
                 )
+
                 TextField(
                     value = aka,
                     onValueChange = setAka,
@@ -127,6 +131,7 @@ fun Join() {
                         unfocusedIndicatorColor = Color.Transparent,
                     )
                 )
+
                 Text(
                     text = "이메일",
                     fontSize = 15.sp,
@@ -223,7 +228,7 @@ fun Join() {
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
                         disabledContainerColor = Color.White,
-                        cursorColor = Color(0xFF868686),
+                        cursorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                     ),
@@ -271,7 +276,7 @@ fun Join() {
                                     return@Button
                                 }
 
-                                saveUserToFirebase(aka, id, pw,
+                                saveUserToFirebase(aka, id, pw,context,
                                     onSuccess = {
                                         Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
                                         val intent = Intent(context, MainActivity::class.java)
@@ -315,27 +320,31 @@ fun saveUserToFirebase(
     aka: String,
     id: String,
     pw: String,
+    context: Context,
     onSuccess: () -> Unit,
     onFailure: (Exception) -> Unit
 ) {
-    val db = Firebase.firestore
-    db.collection("user")
-        .whereEqualTo("id", id)
-        .get()
-        .addOnSuccessListener { result ->
-            if (!result.isEmpty) {
-                onFailure(Exception("이미 사용중인 이메일입니다."))
-            } else {
-                val uid = System.currentTimeMillis().toString()
+    FirebaseAuth.getInstance()
+        .createUserWithEmailAndPassword(id,pw)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnCompleteListener
                 val user = hashMapOf(
                     "aka" to aka,
                     "id" to id,
                     "pw" to pw,
                 )
-                db.collection("user").document(uid).set(user)
+                Firebase.firestore.collection("user").document(uid).set(user)
                     .addOnSuccessListener { onSuccess() }
                     .addOnFailureListener { e -> onFailure(e) }
+            } else {
+                val exception = task.exception
+                if (exception is FirebaseAuthUserCollisionException) {
+                    Toast.makeText(context, "이미 존재하는 계정입니다.", Toast.LENGTH_SHORT).show()
+                } else {
+                    onFailure(task.exception ?: Exception("회원가입 실패"))
+                    Toast.makeText(context, "회원가입 실패", Toast.LENGTH_SHORT).show()
+                }
             }
         }
-        .addOnFailureListener { e -> onFailure(e) }
 }
