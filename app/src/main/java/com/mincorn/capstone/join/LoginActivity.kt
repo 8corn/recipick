@@ -10,9 +10,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -37,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -87,16 +91,12 @@ fun Login() {
     val (pw, setPw) = remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val corner = RoundedCornerShape(8.dp)
-
     Surface(
         color = Color.White
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 30.dp),
+                .fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
 
@@ -105,12 +105,11 @@ fun Login() {
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "logo",
                 modifier = Modifier
-                    .padding(
-                        bottom = 60.dp,
-                        top = 60.dp
-                    )
+                    .padding(top = 160.dp)
                     .size(140.dp)
             )
+
+            Spacer(modifier = Modifier.height(140.dp))
 
             TextField(
                 value = id,
@@ -118,8 +117,8 @@ fun Login() {
                 placeholder = { Text("이메일을 입력해주세요.") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(63.dp)
-                    .padding(top = 10.dp)
+                    .height(52.dp)
+                    .padding(horizontal = 30.dp)
                     .border(1.dp, Color(0xFF868686), RoundedCornerShape(19.dp)),
                 textStyle = TextStyle(fontSize = 20.sp),
                 singleLine = true,
@@ -133,6 +132,8 @@ fun Login() {
                 )
             )
 
+            Spacer(modifier = Modifier.height(22.dp))
+
             TextField(
                 value = pw,
                 onValueChange = setPw,
@@ -140,8 +141,8 @@ fun Login() {
                 visualTransformation = PasswordVisualTransformation('\u2022'),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 19.dp)
                     .height(52.dp)
+                    .padding(horizontal = 30.dp)
                     .border(1.dp, Color(0xFF868686), RoundedCornerShape(19.dp)),
                 textStyle = TextStyle(fontSize = 20.sp),
                 colors = TextFieldDefaults.colors(
@@ -154,81 +155,85 @@ fun Login() {
                 )
             )
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(70.dp))
 
-            Button(
-                onClick = {
-                    keyboardController?.hide()
-                    FirebaseAuth.getInstance()
-                        .signInWithEmailAndPassword(id.trim(), pw.trim())
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val intent = Intent(context, MainActivity::class.java)
-                                context.startActivity(intent)
-                                if (context is LoginActivity) {
-                                    context.finish()
-                                }
-                            } else {
-                                isFailState.value = true
-                                val errorMessage = when (val e = task.exception) {
-                                    is FirebaseAuthInvalidUserException -> "존재하지 않는 계정입니다."
-                                    is FirebaseAuthInvalidCredentialsException -> "이메일 또는 비밀번호가 잘못되었습니다."
-                                    else -> e?.localizedMessage ?: "로그인에 실패하였습니다."
-                                }
-
-                                Log.e("Login", "로그인 실패: $errorMessage", task.exception)
-                                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                },
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .padding(horizontal = 44.dp),
-                shape = corner,
-                contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White,
-                )
+                    .height(45.dp)
+                    .width(291.dp)
+                    .background(Color.Black, shape = RoundedCornerShape(8.dp))
+                    .clickable {
+                        keyboardController?.hide()
+                        FirebaseAuth.getInstance()
+                            .signInWithEmailAndPassword(id.trim(), pw.trim())
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val intent = Intent(context, MainActivity::class.java)
+                                    context.startActivity(intent)
+                                    if (context is LoginActivity) {
+                                        context.finish()
+                                    }
+                                } else {
+                                    isFailState.value = true
+                                    val errorMessage = when (val e = task.exception) {
+                                        is FirebaseAuthInvalidUserException -> "존재하지 않는 계정입니다."
+                                        is FirebaseAuthInvalidCredentialsException -> "이메일 또는 비밀번호가 잘못되었습니다."
+                                        else -> e?.localizedMessage ?: "로그인에 실패하였습니다."
+                                    }
+
+                                    Log.e("Login", "로그인 실패: $errorMessage", task.exception)
+                                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    },
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "레시픽 로그인",
-                    fontSize = 16.sp,
-                    modifier = Modifier.fillMaxWidth(),
+                    fontSize = 15.sp,
                     textAlign = TextAlign.Center,
+                    color = Color.White
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(23.dp))
 
-            Image(
-                painter = painterResource(id = R.drawable.kakao_login_btn),
-                contentDescription = "kakao login",
+            Box (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
-                    .padding(horizontal = 44.dp)
+                    .height(45.dp)
                     .clickable {
                         signInKakao(context)
                     },
-            )
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.kakao_login_btn),
+                    contentDescription = "kakao login",
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(23.dp))
 
-            Image(
-                painter = painterResource(id = R.drawable.naver_login_btn),
-                contentDescription = "naver login",
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
-                    .padding(horizontal = 44.dp)
+                    .height(45.dp)
                     .clickable {
                         signInNaver(context)
                     },
-            )
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.naver_login_btn),
+                    contentDescription = "naver login",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
+            }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             Text(
                 text = "또는",
@@ -239,9 +244,11 @@ fun Login() {
                 )
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(13.dp))
 
             ClickableText(
+                modifier = Modifier
+                    .padding(bottom = 67.dp),
                 text = AnnotatedString("회원가입 하러가기"),
                 onClick = {
                     val intent = Intent(context, JoinActivity::class.java)
