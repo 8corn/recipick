@@ -1,18 +1,21 @@
 [versions]
 agp = "8.8.2"
-kotlin = "2.1.0"
+kotlin = "2.1.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.9.0"
+lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
-composeBom = "2025.05.00"
+composeBom = "2025.06.00"
 navigationCompose = "2.9.0"
+camerax = "1.4.2"
+lifecycle = "2.9.1"
+guava = "33.0.0-android"
 
 coil = "2.5.0"
 googleGmsGoogleServices = "4.4.2"
-firebaseAuth = "23.2.0"
+firebaseAuth = "23.2.1"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
@@ -21,8 +24,8 @@ firebaseFirestoreKtx = "25.1.4"
 generativeai = "0.9.0"
 kakao-all = "2.20.1"
 naver-login = "5.10.0"
-retrofit = "2.9.0"
-gsonConverter = "2.9.0"
+retrofit = "2.11.0"
+gsonConverter = "2.11.0"
 okhttpLogging = "5.0.0-alpha.11"
 
 [libraries]
@@ -41,6 +44,12 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava"}
 
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }

@@ -17,10 +17,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -69,6 +73,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.main.Gemini
 import com.mincorn.capstone.main.TypeDetailScreen
 import com.mincorn.capstone.main.TypeDetail
+import com.mincorn.capstone.other.AddCamera
+import com.mincorn.capstone.other.AddCameraScreen
 import com.mincorn.capstone.other.getFileFromUri
 import com.mincorn.capstone.other.uploadImageToServer
 import com.mincorn.capstone.recipick.PickRecipick
@@ -80,6 +86,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,9 +118,17 @@ fun Reciepick() {
             composable("home") { HomeScreen() }
             composable("search") { SearchScreen() }
             composable("storage") { StorageScreen() }
-            composable("typeDetail/{typename}") { backStackEntry ->
+            composable("typeDetail/{typeName}/{imageUri}/{name}/{count}") { backStackEntry ->
                 val typeName = backStackEntry.arguments?.getString("typeName") ?: ""
-                TypeDetailScreen(typeName)
+                val imageUri = backStackEntry.arguments?.getString("imageUri") ?: ""
+                val name = backStackEntry.arguments?.getString("name") ?: ""
+                val count = backStackEntry.arguments?.getString("count") ?: ""
+                TypeDetailScreen(
+                    typeName = typeName,
+                    imageUri = imageUri,
+                    name = name,
+                    count = count,
+                )
             }
         }
     }
@@ -172,39 +187,22 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
 fun HomeScreen() {
     val types = listOf(
-        Type(R.drawable.logo, "정육/계란"),
-        Type(R.drawable.logo, "채소"),
-        Type(R.drawable.logo, "과일"),
-        Type(R.drawable.logo, "수산"),
-        Type(R.drawable.logo, "간편식품"),
-        Type(R.drawable.logo, "조미료"),
-        Type(R.drawable.logo, "베이커리"),
-        Type(R.drawable.logo, "유제품"),
-        Type(R.drawable.logo, "기타"),
+        Type(R.drawable.meat, "정육/계란"),
+        Type(R.drawable.carrot, "채소"),
+        Type(R.drawable.fruit, "과일"),
+        Type(R.drawable.seafood, "수산"),
+        Type(R.drawable.burger, "간편식품"),
+        Type(R.drawable.sauce, "조미료"),
+        Type(R.drawable.bread, "베이커리"),
+        Type(R.drawable.milk, "유제품"),
+        Type(R.drawable.etc, "기타"),
     )
 
     val context = LocalContext.current
-
-    val photoUri = remember { mutableStateOf<Uri?>(null) }
-    val imageFile = remember { File(context.cacheDir, "capture_image.jpg") }
-
-    val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && photoUri.value != null) {
-            val file = getFileFromUri(context, photoUri.value!!) ?: return@rememberLauncherForActivityResult
-
-            CoroutineScope(Dispatchers.IO).launch {
-                val response = uploadImageToServer(file, context)
-                Log.d("MediaPipe", response)
-
-                CoroutineScope(Dispatchers.Main).launch {
-                    Toast.makeText(context, response, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
 
     Surface(
         color = Color.White
@@ -233,12 +231,8 @@ fun HomeScreen() {
                         .padding(end = 13.dp)
                         .size(24.dp)
                         .clickable {
-                            photoUri.value = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.provider",
-                                imageFile
-                            )
-                            photoUri.value?.let { takePictureLauncher.launch(it) }
+                            val intent = Intent(context, AddCamera::class.java)
+                            context.startActivity(intent)
                         }
                 )
             }
@@ -255,12 +249,13 @@ fun HomeScreen() {
                 columns = GridCells.Fixed(3),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(vertical = 80.dp),
+                    .padding(vertical = 150.dp),
                 content = {
                     items(types) { type ->
                         Column(
                             modifier = Modifier
                                 .padding(14.dp)
+                                .padding(bottom = 14.dp)
                                 .fillMaxWidth()
                                 .clickable {
                                     val intent = Intent(context, TypeDetail::class.java)
@@ -274,6 +269,8 @@ fun HomeScreen() {
                                 contentDescription = "타입 아이콘",
                                 modifier = Modifier.size(64.dp)
                             )
+
+                            Spacer(modifier = Modifier.height(7.dp))
                             Text(
                                 text = type.name,
                                 fontWeight = FontWeight.Bold,
@@ -287,7 +284,6 @@ fun HomeScreen() {
     }
 }
 
-@Preview(showBackground = true)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen() {
@@ -396,9 +392,9 @@ fun SearchScreen() {
 }
 
 @Composable
-fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
-    val context = LocalContext.current
+fun StorageScreen() {
     val uid = FirebaseAuth.getInstance().currentUser?.uid
+    val viewModel: StorageViewModel = viewModel()
 
     LaunchedEffect(uid) {
         if (uid != null) {
@@ -461,21 +457,30 @@ fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
                     SwipeToDismissBox(
                         state = dismissState,
                         backgroundContent = {
+                            val isSwiping = dismissState.targetValue != dismissState.currentValue
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                                 contentAlignment = Alignment.CenterEnd
                             ) {
-                                Text(
-                                    text = "삭제",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier
-                                        .padding(end = 24.dp)
-                                        .background(Color.Red)
-                                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                                )
+                                if (isSwiping) {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(80.dp)
+                                            .fillMaxHeight()
+                                            .background(Color.Red),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = "삭제",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 14.sp,
+                                        )
+                                    }
+                                }
                             }
                         },
                         enableDismissFromStartToEnd = false,
@@ -496,7 +501,6 @@ fun StorageScreen(viewModel: StorageViewModel = viewModel()) {
                                 ) {
                                     Text(text = recipe.name, fontWeight = FontWeight.Bold)
                                     Text(text = "재료: ${recipe.ingredients}")
-                                    Text(text = "레시피: ${recipe.recipe}")
                                 }
                             }
                         }
@@ -523,6 +527,7 @@ fun deleteRecipeFromFirebase(uid: String, recipe: SavedRecipe) {
         .whereEqualTo("name", recipe.name)
         .whereEqualTo("ingredients", recipe.ingredients)
         .whereEqualTo("recipe", recipe.recipe)
+        .whereEqualTo("image", recipe.image)
         .get()
         .addOnSuccessListener { result ->
             for (document in result.documents) {
@@ -540,4 +545,4 @@ data class Recipe(val name: String, val description: String, val image: String)
 
 data class Type(val image: Int, val name: String)
 
-data class SavedRecipe (val name: String, val ingredients: String, val recipe: String, val image: String)
+data class SavedRecipe (val name: String = "", val ingredients: String = "", val recipe: String = "", val image: String = "")

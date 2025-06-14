@@ -9,4 +9,5 @@
     <string name="title_activity_pick_recipick">PickRecipick</string>
     <string name="title_activity_search_recipick">SearchRecipickActivity</string>
     <string name="title_activity_media_pipe_check">MediaPipeCheck</string>
+    <string name="title_activity_add_camera">AddCamera</string>
 </resources>

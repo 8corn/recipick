@@ -16,6 +16,11 @@
         android:theme="@style/Theme.Capstone"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".other.AddCamera"
+            android:exported="false"
+            android:label="@string/title_activity_add_camera"
+            android:theme="@style/Theme.Capstone" />
+        <activity
             android:name=".main.MediaPipeCheck"
             android:exported="false"
             android:label="@string/title_activity_media_pipe_check"
@@ -82,17 +87,17 @@
             android:exported="true"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.Capstone"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Capstone">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Capstone" />
     </application>
 
 </manifest>
