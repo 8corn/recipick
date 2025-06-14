@@ -131,7 +131,7 @@ fun Pick(pickName: String) {
                         .size(24.dp)
                         .clickable {
                             val uid = FirebaseAuth.getInstance().currentUser?.uid
-
+                            Log.d("Firebase uid", "uid: $uid")
                             if (uid != null) {
                                 val savedRecipe = SavedRecipe(
                                     name = pickName,
@@ -221,7 +221,7 @@ fun saveRecipeToFirebase (uid: String, recipes: SavedRecipe) {
         .collection("storage")
         .add(recipes)
         .addOnSuccessListener {
-            Log.d("Firebase", "레시피 저장 성공")
+            Log.d("Firebase", "레시피 저장 성공: ${it.id}")
         }
         .addOnFailureListener {
             Log.e("Firebase", "레시피 저장 실패", it)

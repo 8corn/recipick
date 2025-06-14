@@ -18,11 +18,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -71,6 +73,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.main.Gemini
 import com.mincorn.capstone.main.TypeDetailScreen
 import com.mincorn.capstone.main.TypeDetail
+import com.mincorn.capstone.other.AddCamera
+import com.mincorn.capstone.other.AddCameraScreen
 import com.mincorn.capstone.other.getFileFromUri
 import com.mincorn.capstone.other.uploadImageToServer
 import com.mincorn.capstone.recipick.PickRecipick
@@ -82,6 +86,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -199,24 +204,6 @@ fun HomeScreen() {
 
     val context = LocalContext.current
 
-    val photoUri = remember { mutableStateOf<Uri?>(null) }
-    val imageFile = remember { File(context.cacheDir, "capture_image.jpg") }
-
-    val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && photoUri.value != null) {
-            val file = getFileFromUri(context, photoUri.value!!) ?: return@rememberLauncherForActivityResult
-
-            CoroutineScope(Dispatchers.IO).launch {
-                val response = uploadImageToServer(file, context)
-                Log.d("MediaPipe", response)
-
-                CoroutineScope(Dispatchers.Main).launch {
-                    Toast.makeText(context, response, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     Surface(
         color = Color.White
     ) {
@@ -244,12 +231,8 @@ fun HomeScreen() {
                         .padding(end = 13.dp)
                         .size(24.dp)
                         .clickable {
-                            photoUri.value = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.provider",
-                                imageFile
-                            )
-                            photoUri.value?.let { takePictureLauncher.launch(it) }
+                            val intent = Intent(context, AddCamera::class.java)
+                            context.startActivity(intent)
                         }
                 )
             }
@@ -410,7 +393,6 @@ fun SearchScreen() {
 
 @Composable
 fun StorageScreen() {
-    val context = LocalContext.current
     val uid = FirebaseAuth.getInstance().currentUser?.uid
     val viewModel: StorageViewModel = viewModel()
 
@@ -475,21 +457,30 @@ fun StorageScreen() {
                     SwipeToDismissBox(
                         state = dismissState,
                         backgroundContent = {
+                            val isSwiping = dismissState.targetValue != dismissState.currentValue
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                                 contentAlignment = Alignment.CenterEnd
                             ) {
-                                Text(
-                                    text = "삭제",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier
-                                        .padding(end = 24.dp)
-                                        .background(Color.Red)
-                                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                                )
+                                if (isSwiping) {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(80.dp)
+                                            .fillMaxHeight()
+                                            .background(Color.Red),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = "삭제",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 14.sp,
+                                        )
+                                    }
+                                }
                             }
                         },
                         enableDismissFromStartToEnd = false,
@@ -510,7 +501,6 @@ fun StorageScreen() {
                                 ) {
                                     Text(text = recipe.name, fontWeight = FontWeight.Bold)
                                     Text(text = "재료: ${recipe.ingredients}")
-                                    Text(text = "레시피: ${recipe.recipe}")
                                 }
                             }
                         }
@@ -537,6 +527,7 @@ fun deleteRecipeFromFirebase(uid: String, recipe: SavedRecipe) {
         .whereEqualTo("name", recipe.name)
         .whereEqualTo("ingredients", recipe.ingredients)
         .whereEqualTo("recipe", recipe.recipe)
+        .whereEqualTo("image", recipe.image)
         .get()
         .addOnSuccessListener { result ->
             for (document in result.documents) {
