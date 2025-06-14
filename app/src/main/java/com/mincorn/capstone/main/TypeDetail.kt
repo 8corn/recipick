@@ -1,5 +1,6 @@
 package com.mincorn.capstone.main
 
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
@@ -36,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mincorn.capstone.R
+import com.mincorn.capstone.other.AddCamera
 
 class TypeDetail : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,7 +95,10 @@ fun TypeDetailScreen(typeName: String, imageUri: String, name: String, count: St
                         .align(Alignment.CenterEnd)
                         .padding(end = 13.dp)
                         .size(24.dp)
-                        .clickable {  },
+                        .clickable {
+                            val intent = Intent(context, AddCamera::class.java)
+                            context.startActivity(intent)
+                        },
                 )
             }
             HorizontalDivider(

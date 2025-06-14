@@ -523,19 +523,30 @@ fun deleteRecipeFromFirebase(uid: String, recipe: SavedRecipe) {
     val db = FirebaseFirestore.getInstance()
     val collection = db.collection("user").document(uid).collection("storage")
 
-    collection
-        .whereEqualTo("name", recipe.name)
-        .whereEqualTo("ingredients", recipe.ingredients)
-        .whereEqualTo("recipe", recipe.recipe)
-        .whereEqualTo("image", recipe.image)
-        .get()
+    collection.get()
         .addOnSuccessListener { result ->
-            for (document in result.documents) {
-                document.reference.delete()
+            val target = result.documents.find { doc ->
+                val data = doc.data ?: return@find false
+                data["name"] == recipe.name &&
+                data["ingredients"] == recipe.ingredients &&
+                data["recipe"] == recipe.recipe &&
+                data["image"] == recipe.image
+            }
+
+            if (target != null) {
+                target.reference.delete()
+                    .addOnSuccessListener {
+                        Log.d("Firebase", "레시피 삭제 성공")
+                    }
+                    .addOnFailureListener {
+                        Log.e("Firebase", "레시피 삭제 실패", it)
+                    }
+            } else {
+                Log.w("Firebase", "레시피를 찾을 수 없음")
             }
         }
         .addOnFailureListener {
-            Log.e("Firebase", "레시피 삭제 실패", it)
+            Log.e("Firebase", "레시피 불러오기 실패", it)
         }
 }
 
