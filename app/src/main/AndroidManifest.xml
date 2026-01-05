@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".MyApplication"
+        android:name=".presentation.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
@@ -16,12 +16,12 @@
         android:theme="@style/Theme.Capstone"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".other.AddCamera"
+            android:name=".presentation.other.AddCamera"
             android:exported="false"
             android:label="@string/title_activity_add_camera"
             android:theme="@style/Theme.Capstone" />
         <activity
-            android:name=".main.MediaPipeCheck"
+            android:name=".presentation.main.MediaPipeCheck"
             android:exported="false"
             android:label="@string/title_activity_media_pipe_check"
             android:theme="@style/Theme.Capstone" />
@@ -37,7 +37,7 @@
         </provider>
 
         <activity
-            android:name=".recipick.SearchRecipick"
+            android:name=".presentation.recipick.SearchRecipick"
             android:exported="false"
             android:label="@string/title_activity_search_recipick"
             android:theme="@style/Theme.Capstone" />
@@ -53,7 +53,7 @@
             android:value="레시픽" />
 
         <activity
-            android:name=".recipick.PickRecipick"
+            android:name=".presentation.recipick.PickRecipick"
             android:exported="false"
             android:label="@string/title_activity_pick_recipick"
             android:theme="@style/Theme.Capstone" />
@@ -73,17 +73,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".main.TypeDetail"
+            android:name=".presentation.main.TypeDetail"
             android:exported="false"
             android:label="@string/title_activity_type_detail_screen"
             android:theme="@style/Theme.Capstone" />
         <activity
-            android:name=".join.JoinActivity"
+            android:name=".presentation.join.JoinActivity"
             android:exported="false"
             android:label="@string/title_activity_join"
             android:theme="@style/Theme.Capstone" />
         <activity
-            android:name=".join.LoginActivity"
+            android:name=".presentation.join.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.Capstone"
@@ -95,7 +95,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".presentation.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Capstone" />
     </application>
