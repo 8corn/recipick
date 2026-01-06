@@ -1,16 +1,24 @@
 package com.mincorn.capstone.data.di
 
 import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.mincorn.capstone.R
+import com.mincorn.capstone.data.repository.ImageRepositoryImpl
 import com.mincorn.capstone.data.repository.RecipeRepositoryImpl
+import com.mincorn.capstone.data.source.local.PreferenceManager
 import com.mincorn.capstone.data.source.remote.Gemini
 import com.mincorn.capstone.data.source.remote.UnsplashApi
 import com.mincorn.capstone.domain.model.RecipeRepository
+import com.mincorn.capstone.domain.respository.ImageRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -25,6 +33,18 @@ object NetworkModule {
             .baseUrl("https://api.unsplash.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirestore(): FirebaseFirestore {
+        return Firebase.firestore
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
     }
 
     @Provides
@@ -49,5 +69,20 @@ object NetworkModule {
     ): RecipeRepository {
         val accessKey = context.getString(R.string.unsplash_access_key)
         return RecipeRepositoryImpl(geminiDataSource, api, accessKey)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder().build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideImageRepository(
+        client: OkHttpClient,
+        pref: PreferenceManager
+    ): ImageRepository {
+        return ImageRepositoryImpl(client, pref)
     }
 }

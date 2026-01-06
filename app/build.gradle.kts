@@ -12,12 +12,12 @@ plugins {
 
 android {
     namespace = "com.mincorn.capstone"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mincorn.capstone"
         minSdk = 35
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 

@@ -15,18 +15,3 @@ class MyApplication : Application() {
         KakaoSdk.init(this, getString(R.string.kakao_app_key))
     }
 }
-
-object RetrofitInstance {
-    private lateinit var retrofit: Retrofit
-
-    fun init(context: Context) {
-        retrofit = Retrofit.Builder()
-            .baseUrl("https://api.mincorn.co.kr/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    fun getRetrofit(): Retrofit {
-        return retrofit
-    }
-}

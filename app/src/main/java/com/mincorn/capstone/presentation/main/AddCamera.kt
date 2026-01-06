@@ -1,14 +1,11 @@
-package com.mincorn.capstone.presentation.other
+package com.mincorn.capstone.presentation.main
 
 import android.content.Intent
-import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
@@ -29,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,40 +36,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.mincorn.capstone.presentation.MainActivity
+import androidx.navigation.NavController
 import com.mincorn.capstone.R
+import com.mincorn.capstone.presentation.MainActivity
+import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import java.io.File
 
-class AddCamera : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            AddCameraScreen()
-        }
-    }
-}
-
-@Preview(showBackground = true)
 @Composable
-fun AddCameraScreen() {
-    var lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_FRONT) }
+fun AddCamera(
+    navController: NavController,
+    detectionViewModel: DetectionViewModel = hiltViewModel()
+) {
+    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_FRONT) }
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
-
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
 
     LaunchedEffect(lensFacing) {
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
 
-        val preview = androidx.camera.core.Preview.Builder().build().also {
+        val preview = Preview.Builder().build().also {
             it.surfaceProvider = previewView.surfaceProvider
         }
 
@@ -116,8 +107,7 @@ fun AddCameraScreen() {
                             .size(30.dp)
                             .padding(top = 2.dp)
                             .clickable {
-                                val intent = Intent(context, MainActivity::class.java)
-                                context.startActivity(intent)
+                                navController.popBackStack()
                             }
                     )
 
@@ -176,10 +166,7 @@ fun AddCameraScreen() {
                                         ContextCompat.getMainExecutor(context),
                                         object : ImageCapture.OnImageSavedCallback {
                                             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                                Log.d(
-                                                    "Camera",
-                                                    "사진 찍음: ${photoFile.absolutePath}"
-                                                )
+                                                Log.d("Camera", "사진 찍음: ${photoFile.absolutePath}")
                                             }
 
                                             override fun onError(exception: ImageCaptureException) {

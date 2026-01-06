@@ -24,12 +24,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.mincorn.capstone.R
 
-
-@Preview(showBackground = true)
 @Composable
-fun SearchRecipickScreen() {
+fun SearchReciepick(
+    navController: NavController,
+) {
     val (query, setQuery) = remember { mutableStateOf("") }
 
     Surface (

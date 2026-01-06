@@ -1,6 +1,5 @@
 package com.mincorn.capstone.presentation.main
 
-import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,44 +15,39 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.pullToRefresh
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    viewModel: SearchViewModel = hiltViewModel()
+    navController: NavController,
+    searchViewModel: SearchViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        searchViewModel.loadRecipes(listOf("돼지고기", "양파", "고추장"))
+    }
 
-    val recipes = viewModel.recipes
-    val isRefreshing = viewModel.isRefreshing
-
-    val pullToRefreshState = rememberPullToRefreshState()
+    val recipes = searchViewModel.recipes
+    val isRefreshing = searchViewModel.isRefreshing
 
     Surface (
         modifier = Modifier
-            .fillMaxSize()
-            .pullToRefresh(
-                state = pullToRefreshState,
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    viewModel.loadRecipes()
-                }
-            ),
+            .fillMaxSize(),
         color = Color.White
     ) {
         Column(
@@ -96,9 +90,8 @@ fun SearchScreen(
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = {
-                    viewModel.loadRecipes()
+                    searchViewModel.loadRecipes(listOf("돼지고기", "양파", "고추장"))
                 },
-                state = pullToRefreshState,
                 modifier = Modifier.fillMaxSize()
             ) {
                 LazyColumn (
@@ -112,9 +105,11 @@ fun SearchScreen(
                                 .fillMaxWidth()
                                 .padding(8.dp)
                                 .clickable {
-                                    val intent = Intent(context, PickRecipick::class.java)
-                                    intent.putExtra("pickName", recipe.name)
-                                    context.startActivity(intent)
+                                    val encodedImageUrl = URLEncoder.encode(
+                                        recipe.imageUrl,
+                                        StandardCharsets.UTF_8.toString()
+                                    )
+                                    navController.navigate("PickRecipick/${recipe.name}/$encodedImageUrl")
                                 }
                         ) {
                             AsyncImage(

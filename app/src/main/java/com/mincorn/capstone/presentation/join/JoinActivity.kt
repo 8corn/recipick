@@ -1,14 +1,6 @@
 package com.mincorn.capstone.presentation.join
 
-import android.content.Context
-import android.content.Intent
-import android.os.Bundle
-import android.util.Log
-import android.util.Patterns
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,18 +29,20 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.firestore.firestore
-import com.mincorn.capstone.presentation.MainActivity
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.mincorn.capstone.presentation.viewmodel.AuthViewModel
+import com.mincorn.capstone.utils.Validator
 
-@Preview(showBackground = true)
 @Composable
-fun Join() {
+fun JoinActivity(
+    navController: NavController,
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
+    val context = LocalContext.current
+
     val (aka, setAka) = remember { mutableStateOf("") }
     val (id, setId) = remember { mutableStateOf("") }
     val (idErrorText, setIdErrorText) = remember { mutableStateOf<String?>(null) }
@@ -55,7 +50,17 @@ fun Join() {
     val (pwCheck, setPwCheck) = remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val (pwErrorText, setPwErrorText) = remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
+
+    LaunchedEffect(authViewModel.loginSuccess) {
+        if (authViewModel.loginSuccess) {
+            Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+
+            navController.navigate("Reciepick") {
+                popUpTo("JoinActivity") { inclusive = true }
+                popUpTo("LoginActivity") { inclusive = true }
+            }
+        }
+    }
 
     Surface(
         color = Color.White
@@ -130,7 +135,7 @@ fun Join() {
                     onValueChange = {
                         setId(it)
                         setIdErrorText(
-                            if (isValidEmail(it)) null else "올바른 이메일 형식이 아닙니다."
+                            if (!Validator.isValidEmail(it)) null else "올바른 이메일 형식이 아닙니다."
                         )
                     },
                     modifier = Modifier
@@ -250,7 +255,8 @@ fun Join() {
                         Button(
                             onClick = {
                                 keyboardController?.hide()
-                                if (!isValidEmail(id)) {
+
+                                if (!Validator.isValidEmail(id)) {
                                     setIdErrorText("올바른 이메일 형식이 아닙니다.")
                                     Toast.makeText(context, "이메일을 올바르게 입력해주세요.", Toast.LENGTH_SHORT).show()
                                     return@Button
@@ -262,17 +268,7 @@ fun Join() {
                                     return@Button
                                 }
 
-                                saveUserToFirebase(aka, id, pw,context,
-                                    onSuccess = {
-                                        Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-                                        val intent = Intent(context, MainActivity::class.java)
-                                        context.startActivity(intent)
-                                    },
-                                    onFailure = { e ->
-                                        Toast.makeText(context, "회원가입에 실패하였습니다. ${e.message}", Toast.LENGTH_LONG).show()
-                                        Log.e("Join", "회원가입 실패", e)
-                                    }
-                                )
+                                authViewModel.signUpWithEmail(aka, id, pw)
                             },
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -296,41 +292,4 @@ fun Join() {
             }
         }
     }
-}
-
-fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
-}
-
-fun saveUserToFirebase(
-    aka: String,
-    id: String,
-    pw: String,
-    context: Context,
-    onSuccess: () -> Unit,
-    onFailure: (Exception) -> Unit
-) {
-    FirebaseAuth.getInstance()
-        .createUserWithEmailAndPassword(id,pw)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnCompleteListener
-                val user = hashMapOf(
-                    "aka" to aka,
-                    "id" to id,
-                    "pw" to pw,
-                )
-                Firebase.firestore.collection("user").document(uid).set(user)
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { e -> onFailure(e) }
-            } else {
-                val exception = task.exception
-                if (exception is FirebaseAuthUserCollisionException) {
-                    Toast.makeText(context, "이미 존재하는 계정입니다.", Toast.LENGTH_SHORT).show()
-                } else {
-                    onFailure(task.exception ?: Exception("회원가입 실패"))
-                    Toast.makeText(context, "회원가입 실패", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
 }

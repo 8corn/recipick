@@ -1,12 +1,6 @@
 package com.mincorn.capstone.presentation.main
 
-import android.content.Intent
 import android.graphics.BitmapFactory
-import android.net.Uri
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,13 +21,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
+import androidx.navigation.NavController
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
-fun MediaPipeCheckScreen(imageUri: String, name: String, count: String) {
+fun MediaPipeCheck(
+    navController: NavController,
+    imageUri: String,
+    name: String,
+    count: String
+) {
     val context = LocalContext.current
     val imageBitmap = remember(imageUri) {
         runCatching {
-            val inputStream = context.contentResolver.openInputStream(Uri.parse(imageUri))
+            val inputStream = context.contentResolver.openInputStream(imageUri.toUri())
 
             BitmapFactory.decodeStream(inputStream)
         }.getOrNull()
@@ -76,14 +79,14 @@ fun MediaPipeCheckScreen(imageUri: String, name: String, count: String) {
 
             Button(
                 onClick = {
-                    val intent = Intent(context, TypeDetail::class.java)
-                        .apply {
-                            putExtra("typeName", "정육/계란")
-                            putExtra("imageUri", imageUri)
-                            putExtra("name", nameState)
-                            putExtra("count", countState)
+                    val encodedUri = URLEncoder.encode(imageUri, StandardCharsets.UTF_8.toString())
+
+                    val typeName = "정육_계란"
+                    navController.navigate("typeDetail/$typeName/$encodedUri/$nameState/$countState") {
+                        popUpTo("MediaPipeConnect") {
+                            inclusive = true
                         }
-                    context.startActivity(intent)
+                    }
                 }
             ) {
                 Text(

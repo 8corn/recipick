@@ -1,6 +1,5 @@
 package com.mincorn.capstone.presentation.main
 
-import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,19 +21,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.mincorn.capstone.R
-import com.mincorn.capstone.presentation.Type
-import com.mincorn.capstone.presentation.other.AddCamera
+import com.mincorn.capstone.presentation.uiModel.Type
+import java.net.URLEncoder
 
-@Preview(showBackground = true)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    navController: NavController,
+) {
     val types = listOf(
         Type(R.drawable.meat, "정육/계란"),
         Type(R.drawable.carrot, "채소"),
@@ -46,8 +45,6 @@ fun HomeScreen() {
         Type(R.drawable.milk, "유제품"),
         Type(R.drawable.etc, "기타"),
     )
-
-    val context = LocalContext.current
 
     Surface(
         color = Color.White
@@ -76,8 +73,7 @@ fun HomeScreen() {
                         .padding(end = 13.dp)
                         .size(24.dp)
                         .clickable {
-                            val intent = Intent(context, AddCamera::class.java)
-                            context.startActivity(intent)
+                            navController.navigate("AddCamera")
                         }
                 )
             }
@@ -103,9 +99,8 @@ fun HomeScreen() {
                                 .padding(bottom = 14.dp)
                                 .fillMaxWidth()
                                 .clickable {
-                                    val intent = Intent(context, TypeDetail::class.java)
-                                    intent.putExtra("typeName", type.name)
-                                    context.startActivity(intent)
+                                    val encodedTypeName = URLEncoder.encode(type.name, "UTF-8")
+                                    navController.navigate("typeDetail/$encodedTypeName")
                                 },
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {

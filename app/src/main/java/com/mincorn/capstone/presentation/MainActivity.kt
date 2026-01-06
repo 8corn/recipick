@@ -16,24 +16,9 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             NavGraph(
+//                startPage = "LoginActivity"
                 startPage = "Reciepick"
             )
         }
-    }
-}
-
-
-
-
-
-
-
-
-
-object RecipeStorage {
-    val savedRecipes = mutableStateListOf<SavedRecipe>()
-
-    fun add(recipe: SavedRecipe) {
-        savedRecipes.add(recipe)
     }
 }

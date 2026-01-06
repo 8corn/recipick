@@ -13,6 +13,7 @@ data class SavedRecipe(
 interface StorageRepository {
     fun getSavedRecipes(uid: String): Flow<List<SavedRecipe>>
     suspend fun deleteRecipe(uid: String, recipe: SavedRecipe)
+    suspend fun saveRecipe(uid: String, recipe: SavedRecipe)
 }
 
 class GetSavedRecipesUseCase @Inject constructor(
@@ -20,5 +21,13 @@ class GetSavedRecipesUseCase @Inject constructor(
 ) {
     operator fun invoke(uid: String): Flow<List<SavedRecipe>> {
         return repository.getSavedRecipes(uid)
+    }
+}
+
+class SaveRecipeUseCase @Inject constructor(
+    private val repository: StorageRepository
+) {
+    suspend operator fun invoke(uid: String, recipe: SavedRecipe) {
+        repository.saveRecipe(uid, recipe)
     }
 }

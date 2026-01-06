@@ -34,6 +34,18 @@ class StorageRepositoryImpl @Inject constructor(
         awaitClose { subscription.remove() }
     }
 
+    override suspend fun saveRecipe(uid: String, recipe: SavedRecipe) {
+        try {
+            firestore.collection("user")
+                .document(uid)
+                .collection("storage")
+                .add(recipe)
+                .await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override suspend fun deleteRecipe(uid: String, recipe: SavedRecipe) {
         try {
             val collection = firestore.collection("user").document(uid).collection("storage")

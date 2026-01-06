@@ -7,6 +7,7 @@ import com.mincorn.capstone.domain.model.Recipe
 import com.mincorn.capstone.domain.model.RecipeRepository
 import com.mincorn.capstone.data.source.remote.Gemini
 import com.mincorn.capstone.data.source.remote.UnsplashApi
+import com.mincorn.capstone.domain.model.RecipeDetail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
@@ -38,6 +39,27 @@ class RecipeRepositoryImpl @Inject constructor(
         val response = geminiDataSource.generateText(prompt)
 
         return parseRecipes(response)
+    }
+
+    override suspend fun getRecipeDetail(name: String): RecipeDetail {
+        val prompt = """
+            $name 요리의 레시피를 알려줘.
+            응답은 반드시 아래 JSON 형식으로만 답변해줘. 다른 설명은 하지마.
+            {
+              "ingredients": "필요한 재료들을 쉼표로 구분한 문자열",
+              "instructions": "요리 순서를 1. 2. 3. 번호를 붙여 설명한 문자열"
+            }
+        """.trimIndent()
+
+        val response = geminiDataSource.generateText(prompt)
+
+        return try {
+            val cleanJson = response.replace("```json", "").replace("```", "").trim()
+            val dto = Gson().fromJson(cleanJson, RecipeDetailDto::class.java)
+            RecipeDetail(dto.ingredients, dto.instructions)
+        } catch (e: Exception) {
+            RecipeDetail("재료를 불러올 수 없습니다.", "레시피를 불러올 수 없습니다.")
+        }
     }
 
     private suspend fun parseRecipes(jsonResponse: String): List<Recipe> {
@@ -80,4 +102,9 @@ private data class RecipeDto(
     val name: String,
     val description: String,
     val translatedName: String
+)
+
+private data class RecipeDetailDto(
+    val ingredients: String,
+    val instructions: String
 )

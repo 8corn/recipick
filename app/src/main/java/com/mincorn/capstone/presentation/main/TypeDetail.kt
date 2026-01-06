@@ -1,18 +1,14 @@
 package com.mincorn.capstone.presentation.main
 
-import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -30,25 +26,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.mincorn.capstone.R
-import com.mincorn.capstone.presentation.other.AddCamera
+import androidx.core.net.toUri
+import coil.compose.AsyncImage
 
 @Composable
-fun TypeDetailScreen(typeName: String, imageUri: String, name: String, count: String) {
-    val context = LocalContext.current
-    val imageBitmap = remember(imageUri) {
-        runCatching {
-            val inputStream = context.contentResolver.openInputStream(Uri.parse(imageUri))
-
-            BitmapFactory.decodeStream(inputStream)
-        }.getOrNull()
-    }
+fun TypeDetail(
+    navController: NavController,
+    typeName: String,
+    imageUri: String,
+    name: String,
+    count: String
+) {
+//    val context = LocalContext.current
+//    val imageBitmap = remember(imageUri) {
+//        runCatching {
+//            val inputStream = context.contentResolver.openInputStream(imageUri.toUri())
+//
+//            BitmapFactory.decodeStream(inputStream)
+//        }.getOrNull()
+//    }
 
     var nameState by remember { mutableStateOf(name) }
     var countState by remember { mutableStateOf(count) }
@@ -82,8 +86,7 @@ fun TypeDetailScreen(typeName: String, imageUri: String, name: String, count: St
                         .padding(end = 13.dp)
                         .size(24.dp)
                         .clickable {
-                            val intent = Intent(context, AddCamera::class.java)
-                            context.startActivity(intent)
+                            navController.navigate("AddCamera")
                         },
                 )
             }
@@ -95,17 +98,26 @@ fun TypeDetailScreen(typeName: String, imageUri: String, name: String, count: St
                 color = Color(0xFF868686)
             )
 
-            imageBitmap?.let {
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
-            }
+//            imageBitmap?.let {
+//                Image(
+//                    bitmap = it.asImageBitmap(),
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                )
+//            }
+
+            AsyncImage(
+                model = imageUri,
+                contentDescription = "재료 이미지",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                contentScale = ContentScale.Crop
+            )
 
             Text(
-                text = nameState
+                text = nameState,
             )
 
             Text(
@@ -113,15 +125,4 @@ fun TypeDetailScreen(typeName: String, imageUri: String, name: String, count: St
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TypeDetailPreview() {
-    TypeDetailScreen(
-        typeName = "정육/계란",
-        imageUri = "",
-        name = "",
-        count = ""
-    )
 }

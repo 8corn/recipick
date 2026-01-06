@@ -18,7 +18,6 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,29 +25,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.google.firebase.auth.FirebaseAuth
-import com.mincorn.capstone.presentation.RecipeStorage
-import com.mincorn.capstone.presentation.deleteRecipeFromFirebase
-import com.mincorn.capstone.presentation.recipick.loadSavedRecipeFromFirebase
 import com.mincorn.capstone.presentation.viewmodel.StorageViewModel
 
 @Composable
 fun StorageScreen(
-    viewModel: StorageViewModel = hiltViewModel()
+    navController: NavController,
+    storageViewModel: StorageViewModel = hiltViewModel()
 ) {
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
-
-    LaunchedEffect(uid) {
-        if (uid != null) {
-            loadSavedRecipeFromFirebase(uid) { recipes ->
-                RecipeStorage.savedRecipes.clear()
-                RecipeStorage.savedRecipes.addAll(recipes)
-            }
-        }
-    }
-
-    val savedRecipe = viewModel.savedRecipes
+    val savedRecipe = storageViewModel.savedRecipes
 
     Surface (
         color = Color.White
@@ -81,17 +67,16 @@ fun StorageScreen(
             )
 
             LazyColumn {
-                items(savedRecipe.size, key =  {index -> savedRecipe[index].name }){index ->
+                items(
+                    count = savedRecipe.size,
+                    key =  {index -> savedRecipe[index].name }
+                ){index ->
                     val recipe = savedRecipe[index]
 
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { value ->
                             if (value == SwipeToDismissBoxValue.EndToStart) {
-                                val uid2 = FirebaseAuth.getInstance().currentUser?.uid
-                                if (uid2 != null) {
-                                    deleteRecipeFromFirebase(uid2, recipe)
-                                }
-                                savedRecipe.remove(recipe)
+                                storageViewModel.deleteRecipe(recipe)
                                 true
                             } else false
                         }
@@ -100,29 +85,28 @@ fun StorageScreen(
                     SwipeToDismissBox(
                         state = dismissState,
                         backgroundContent = {
-                            val isSwiping = dismissState.targetValue != dismissState.currentValue
+                            val isSwipingColor = if (dismissState.targetValue == dismissState.currentValue) Color.Red else Color.Transparent
 
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
+                                    .background(isSwipingColor)
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                                 contentAlignment = Alignment.CenterEnd
                             ) {
-                                if (isSwiping) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(80.dp)
-                                            .fillMaxHeight()
-                                            .background(Color.Red),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Text(
-                                            text = "삭제",
-                                            color = Color.White,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 14.sp,
-                                        )
-                                    }
+                                Box(
+                                    modifier = Modifier
+                                        .width(80.dp)
+                                        .fillMaxHeight()
+                                        .background(Color.Red),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "삭제",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp,
+                                    )
                                 }
                             }
                         },
@@ -142,8 +126,14 @@ fun StorageScreen(
                                 Column (
                                     modifier = Modifier.padding(start = 8.dp)
                                 ) {
-                                    Text(text = recipe.name, fontWeight = FontWeight.Bold)
-                                    Text(text = "재료: ${recipe.ingredients}")
+                                    Text(
+                                        text = recipe.name,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    Text(
+                                        text = "재료: ${recipe.ingredients}"
+                                    )
                                 }
                             }
                         }
