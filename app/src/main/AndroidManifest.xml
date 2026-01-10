@@ -2,10 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
-        android:name=".MyApplication"
+        android:name=".presentation.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
@@ -15,16 +20,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Capstone"
         android:usesCleartextTraffic="true">
-        <activity
-            android:name=".other.AddCamera"
-            android:exported="false"
-            android:label="@string/title_activity_add_camera"
-            android:theme="@style/Theme.Capstone" />
-        <activity
-            android:name=".main.MediaPipeCheck"
-            android:exported="false"
-            android:label="@string/title_activity_media_pipe_check"
-            android:theme="@style/Theme.Capstone" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -36,12 +31,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity
-            android:name=".recipick.SearchRecipick"
-            android:exported="false"
-            android:label="@string/title_activity_search_recipick"
-            android:theme="@style/Theme.Capstone" />
-
         <meta-data
             android:name="com.naver.oauth.client_id"
             android:value="@string/naver_client_id" />
@@ -52,11 +41,6 @@
             android:name="com.naver.oauth.client_name"
             android:value="레시픽" />
 
-        <activity
-            android:name=".recipick.PickRecipick"
-            android:exported="false"
-            android:label="@string/title_activity_pick_recipick"
-            android:theme="@style/Theme.Capstone" />
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true"
@@ -72,32 +56,17 @@
                     android:scheme="@string/kakao_redirect_app_key" />
             </intent-filter>
         </activity>
+
         <activity
-            android:name=".main.TypeDetail"
-            android:exported="false"
-            android:label="@string/title_activity_type_detail_screen"
-            android:theme="@style/Theme.Capstone" />
-        <activity
-            android:name=".join.JoinActivity"
-            android:exported="false"
-            android:label="@string/title_activity_join"
-            android:theme="@style/Theme.Capstone" />
-        <activity
-            android:name=".join.LoginActivity"
+            android:name=".presentation.MainActivity"
             android:exported="true"
-            android:label="@string/title_activity_login"
-            android:theme="@style/Theme.Capstone"
-            android:windowSoftInputMode="adjustResize">
+            android:theme="@style/Theme.Capstone" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Capstone" />
     </application>
 
 </manifest>
