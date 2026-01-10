@@ -1,7 +1,11 @@
 package com.mincorn.capstone.presentation.main
 
-import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -10,6 +14,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,8 +26,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,20 +52,46 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.mincorn.capstone.R
-import com.mincorn.capstone.presentation.MainActivity
 import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import java.io.File
+import java.net.URLEncoder
 
 @Composable
-fun AddCamera(
+fun AddCamera (
     navController: NavController,
     detectionViewModel: DetectionViewModel = hiltViewModel()
 ) {
-    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_FRONT) }
     val context = LocalContext.current
+    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_BACK) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
+    var showUrlDialog by remember { mutableStateOf(false) }
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        hasCameraPermission = isGranted
+        if (!isGranted) {
+            Log.e("Camera", "카메라 권한 없음")
+            Toast.makeText(context, "카메라 권한 없음\n설정 -> 애플리케이션 -> 레시픽 -> 권한에서 허용해주세요.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            launcher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     LaunchedEffect(lensFacing) {
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
@@ -80,6 +114,40 @@ fun AddCamera(
         } catch (e: Exception) {
             Log.e("Camera", "카메라 바인딩 실패", e)
         }
+    }
+
+    if (showUrlDialog) {
+        var tempUrl by remember { mutableStateOf(detectionViewModel.getStoredUrl()) }
+        AlertDialog(
+            onDismissRequest = { showUrlDialog = false },
+            title = {
+                Text(
+                    text = "서버 주소 설정"
+                )
+            },
+            text = {
+                TextField(
+                    value = tempUrl,
+                    onValueChange = { tempUrl = it },
+                    placeholder = {
+                        Text(
+                            "https://your-ngrok.app"
+                        )
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        detectionViewModel.updateUrl(tempUrl)
+                        showUrlDialog = false
+                }) {
+                    Text(
+                        text = "저장",
+                    )
+                }
+            }
+        )
     }
 
     Surface(
@@ -106,18 +174,27 @@ fun AddCamera(
                         modifier = Modifier
                             .size(30.dp)
                             .padding(top = 2.dp)
-                            .clickable {
+                            .clickable (
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
                                 navController.popBackStack()
                             }
                     )
 
                     Text(
-                        text = "실시간 촬영",
+                        text = "사진",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
                         modifier = Modifier
                             .align(Alignment.Center)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                showUrlDialog = true
+                            }
                     )
                 }
             }
@@ -152,7 +229,10 @@ fun AddCamera(
                         modifier = Modifier
                             .size(60.dp)
                             .align(Alignment.Center)
-                            .clickable {
+                            .clickable (
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
                                 imageCapture?.let { capture ->
                                     val photoFile = File(
                                         context.cacheDir,
@@ -167,6 +247,16 @@ fun AddCamera(
                                         object : ImageCapture.OnImageSavedCallback {
                                             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                                                 Log.d("Camera", "사진 찍음: ${photoFile.absolutePath}")
+
+                                                val route = detectionViewModel.processImageAndGetRoute(photoFile)
+
+                                                ContextCompat.getMainExecutor(context).execute {
+                                                    navController.navigate(route) {
+                                                        popUpTo("AddCamera") {
+                                                            inclusive = true
+                                                        }
+                                                    }
+                                                }
                                             }
 
                                             override fun onError(exception: ImageCaptureException) {
@@ -175,8 +265,6 @@ fun AddCamera(
                                         }
                                     )
                                 }
-                                val intent = Intent(context, MainActivity::class.java)
-                                context.startActivity(intent)
                             },
                     )
 
@@ -189,15 +277,18 @@ fun AddCamera(
                             .size(48.dp)
                             .align(Alignment.CenterEnd)
                             .offset(x = (-28).dp)
-                            .clickable {
+                            .clickable (
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
                                 lensFacing =
                                     if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
-                                        CameraSelector.LENS_FACING_BACK
                                         Log.d("Camera", "카메라 뒤로 회전")
+                                        CameraSelector.LENS_FACING_BACK
                                     }
                                     else {
-                                        CameraSelector.LENS_FACING_FRONT
                                         Log.d("Camera", "카메라 앞으로 회전")
+                                        CameraSelector.LENS_FACING_FRONT
                                     }
                             }
                     )
@@ -206,3 +297,12 @@ fun AddCamera(
         }
     }
 }
+
+//앱의 설정 화면 바로 열어주는 함수
+//fun openAppSettings(context: Context) {
+//    val intent = Intent(
+//        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+//        Uri.fromParts("package", context.packageName, null)
+//    )
+//    context.startActivity(intent)
+//}

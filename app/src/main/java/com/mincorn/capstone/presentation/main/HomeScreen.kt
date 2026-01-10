@@ -2,6 +2,7 @@ package com.mincorn.capstone.presentation.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +35,7 @@ import java.net.URLEncoder
 @Composable
 fun HomeScreen(
     navController: NavController,
+    onCameraClick: () -> Unit
 ) {
     val types = listOf(
         Type(R.drawable.meat, "정육/계란"),
@@ -72,8 +75,11 @@ fun HomeScreen(
                         .align(Alignment.CenterEnd)
                         .padding(end = 13.dp)
                         .size(24.dp)
-                        .clickable {
-                            navController.navigate("AddCamera")
+                        .clickable (
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            onCameraClick()
                         }
                 )
             }
@@ -111,6 +117,7 @@ fun HomeScreen(
                             )
 
                             Spacer(modifier = Modifier.height(7.dp))
+
                             Text(
                                 text = type.name,
                                 fontWeight = FontWeight.Bold,

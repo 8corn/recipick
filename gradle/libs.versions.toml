@@ -17,14 +17,16 @@ hiltAndroidGradlePlugin = "2.57.2"
 hiltAndroid = "2.57.2"
 hiltNavigationCompose = "1.3.0"
 
+tensorflowLiteTaskVisionPlayServices = "0.4.4"
+playServicesTfliteGpu = "16.4.0"
+
 coil = "2.7.0"
 googleGmsGoogleServices = "4.4.4"
-firebaseAuth = "24.0.1"
+firebaseBom = "33.5.0"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
 playServicesAuth = "21.4.0"
-firebaseFirestoreKtx = "25.1.4"
 generativeai = "0.9.0"
 kakao-all = "2.20.1"
 naver-login = "5.11.1"
@@ -60,14 +62,18 @@ androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-com
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 
+tensorflow-lite-task-vision-play-services = { module = "org.tensorflow:tensorflow-lite-task-vision-play-services", version.ref = "tensorflowLiteTaskVisionPlayServices" }
+play-services-tflite-gpu = { module = "com.google.android.gms:play-services-tflite-gpu", version.ref = "playServicesTfliteGpu" }
+
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }
-firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth"}
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
-firebase-firestore-ktx = {group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx"}
+firebase-firestore-ktx = {group = "com.google.firebase", name = "firebase-firestore-ktx"}
 generativeai = {group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai"}
 kakao-all = {group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao-all"}
 naver-login = {group = "com.navercorp.nid", name = "oauth", version.ref = "naver-login"}

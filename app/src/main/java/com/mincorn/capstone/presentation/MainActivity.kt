@@ -9,7 +9,9 @@ import androidx.core.view.WindowCompat
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.domain.model.SavedRecipe
 import com.mincorn.capstone.presentation.nav.NavGraph
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,7 +19,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             NavGraph(
 //                startPage = "LoginActivity"
-                startPage = "Reciepick"
+                startPage = "Recipick"
             )
         }
     }

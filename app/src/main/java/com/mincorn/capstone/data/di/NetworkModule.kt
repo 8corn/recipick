@@ -6,13 +6,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.mincorn.capstone.R
-import com.mincorn.capstone.data.repository.ImageRepositoryImpl
-import com.mincorn.capstone.data.repository.RecipeRepositoryImpl
-import com.mincorn.capstone.data.source.local.PreferenceManager
 import com.mincorn.capstone.data.source.remote.Gemini
 import com.mincorn.capstone.data.source.remote.UnsplashApi
-import com.mincorn.capstone.domain.model.RecipeRepository
-import com.mincorn.capstone.domain.respository.ImageRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,6 +16,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -55,6 +51,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("unsplash_key")
+    fun provideUnsplashKey(@ApplicationContext context: Context): String {
+        return context.getString(R.string.unsplash_access_key)
+    }
+
+    @Provides
+    @Singleton
     fun provideGemini(@ApplicationContext context: Context): Gemini {
         val apiKey = context.getString(R.string.gemini)
         return Gemini(apiKey)
@@ -62,27 +65,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRecipeRepository(
-        geminiDataSource: Gemini,
-        api: UnsplashApi,
-        @ApplicationContext context: Context
-    ): RecipeRepository {
-        val accessKey = context.getString(R.string.unsplash_access_key)
-        return RecipeRepositoryImpl(geminiDataSource, api, accessKey)
-    }
-
-    @Provides
-    @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder().build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideImageRepository(
-        client: OkHttpClient,
-        pref: PreferenceManager
-    ): ImageRepository {
-        return ImageRepositoryImpl(client, pref)
     }
 }

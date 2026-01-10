@@ -1,6 +1,5 @@
 package com.mincorn.capstone.data.repository
 
-import androidx.camera.core.ImageProcessor
 import com.google.gson.Gson
 import com.mincorn.capstone.data.source.local.PreferenceManager
 import com.mincorn.capstone.data.source.remote.response.DetectionResponse
@@ -21,7 +20,8 @@ class ImageRepositoryImpl @Inject constructor(
     private val preferenceManager: PreferenceManager
 ): ImageRepository {
     override suspend fun uploadImage(imageFile: File): String = withContext(Dispatchers.IO){
-        val url = preferenceManager.getNgrokUrl() + "/upload-image/"
+        val baseUrl = preferenceManager.getNgrokUrl().removeSuffix("/")
+        val url = "$baseUrl/upload-image/"
 
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -39,7 +39,7 @@ class ImageRepositoryImpl @Inject constructor(
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("에러 발생: $response")
 
-            val jsonString = response.body?.string() ?: ""
+            val jsonString = response.body.string()
             val result = Gson().fromJson(jsonString, DetectionResponse::class.java)
 
             val objectList = result.objects?.joinToString("\n") {

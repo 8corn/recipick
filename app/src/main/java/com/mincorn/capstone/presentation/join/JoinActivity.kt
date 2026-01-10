@@ -55,7 +55,7 @@ fun JoinActivity(
         if (authViewModel.loginSuccess) {
             Toast.makeText(context, "회원가입이 완료되었습니다.", Toast.LENGTH_SHORT).show()
 
-            navController.navigate("Reciepick") {
+            navController.navigate("Recipick") {
                 popUpTo("JoinActivity") { inclusive = true }
                 popUpTo("LoginActivity") { inclusive = true }
             }

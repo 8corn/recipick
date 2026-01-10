@@ -15,27 +15,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class FirebaseViewModel @Inject constructor(
-    private val savedRecipesUseCase: SaveRecipeUseCase,
-    private val getSavedRecipesUseCase: GetSavedRecipesUseCase
-) : ViewModel() {
-
-    fun saveRecipe(recipe: SavedRecipe) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-        viewModelScope.launch {
-            savedRecipesUseCase.invoke(uid, recipe)
-        }
-    }
-}
-
-@HiltViewModel
 class AuthViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore
 ) : ViewModel() {
     var loginSuccess by mutableStateOf(false)
         private set
+
+    init {
+        if (auth.currentUser != null) {
+            loginSuccess = true
+        }
+    }
 
     fun signUpWithEmail(aka: String, email: String, pw: String) {
         auth.createUserWithEmailAndPassword(email, pw)

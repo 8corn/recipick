@@ -1,8 +1,5 @@
 package com.mincorn.capstone.presentation.main
 
-import android.graphics.BitmapFactory
-import android.net.Uri
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,35 +22,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.mincorn.capstone.R
-import androidx.core.net.toUri
 import coil.compose.AsyncImage
+import com.mincorn.capstone.R
 
 @Composable
 fun TypeDetail(
     navController: NavController,
+    onCameraClick: () -> Unit,
     typeName: String,
     imageUri: String,
     name: String,
     count: String
 ) {
-//    val context = LocalContext.current
-//    val imageBitmap = remember(imageUri) {
-//        runCatching {
-//            val inputStream = context.contentResolver.openInputStream(imageUri.toUri())
-//
-//            BitmapFactory.decodeStream(inputStream)
-//        }.getOrNull()
-//    }
-
     var nameState by remember { mutableStateOf(name) }
     var countState by remember { mutableStateOf(count) }
 
@@ -75,7 +61,8 @@ fun TypeDetail(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
                 )
 
                 Icon (
@@ -86,7 +73,7 @@ fun TypeDetail(
                         .padding(end = 13.dp)
                         .size(24.dp)
                         .clickable {
-                            navController.navigate("AddCamera")
+                            onCameraClick()
                         },
                 )
             }
@@ -97,15 +84,6 @@ fun TypeDetail(
                 thickness = 1.dp,
                 color = Color(0xFF868686)
             )
-
-//            imageBitmap?.let {
-//                Image(
-//                    bitmap = it.asImageBitmap(),
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                )
-//            }
 
             AsyncImage(
                 model = imageUri,

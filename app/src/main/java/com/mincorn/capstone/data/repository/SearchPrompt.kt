@@ -3,20 +3,21 @@ package com.mincorn.capstone.data.repository
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.mincorn.capstone.domain.model.Recipe
-import com.mincorn.capstone.domain.model.RecipeRepository
 import com.mincorn.capstone.data.source.remote.Gemini
 import com.mincorn.capstone.data.source.remote.UnsplashApi
+import com.mincorn.capstone.domain.model.Recipe
 import com.mincorn.capstone.domain.model.RecipeDetail
+import com.mincorn.capstone.domain.respository.RecipeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 import javax.inject.Inject
+import javax.inject.Named
 
 class RecipeRepositoryImpl @Inject constructor(
     private val geminiDataSource: Gemini,
     private val api: UnsplashApi,
-    private val accessKey: String,
+    @Named("unsplash_key") private val accessKey: String,
 ): RecipeRepository {
     override suspend fun getRecommendations(ingredients: List<String>): List<Recipe> {
         val prompt = """
@@ -64,13 +65,18 @@ class RecipeRepositoryImpl @Inject constructor(
 
     private suspend fun parseRecipes(jsonResponse: String): List<Recipe> {
         return try {
-            val cleanJson = jsonResponse
-                .replace("```json", "")
-                .replace("```", "")
-                .trim()
+            val startIndex = jsonResponse.indexOf('[')
+            val endIndex = jsonResponse.indexOf(']')
+
+            if (startIndex == -1 || endIndex == -1) {
+                Log.e("RecipeRepository", "JSON 형식을 찾을 수 없음: $jsonResponse")
+                return emptyList()
+            }
+
+            val jsonString = jsonResponse.substring(startIndex, endIndex + 1)
 
             val type = object : TypeToken<List<RecipeDto>>() {}.type
-            val recipeDtos: List<RecipeDto> = Gson().fromJson(cleanJson, type)
+            val recipeDtos: List<RecipeDto> = Gson().fromJson(jsonString, type)
 
             recipeDtos.map { dto ->
                 val imageUrl = getImageUrl(dto.translatedName)

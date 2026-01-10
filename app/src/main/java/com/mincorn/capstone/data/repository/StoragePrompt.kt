@@ -2,7 +2,7 @@ package com.mincorn.capstone.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mincorn.capstone.domain.model.SavedRecipe
-import com.mincorn.capstone.domain.model.StorageRepository
+import com.mincorn.capstone.domain.respository.StorageRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

@@ -35,7 +35,8 @@ fun SectionText(title: String, content: String) {
         color = Color.Black,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp),
+            .padding(top = 12.dp)
+            .padding(horizontal = 20.dp),
         textAlign = TextAlign.Center
     )
 
@@ -45,7 +46,7 @@ fun SectionText(title: String, content: String) {
         color = Color.Black,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 12.dp, horizontal = 20.dp),
         textAlign = TextAlign.Center
     )
 }

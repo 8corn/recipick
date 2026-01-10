@@ -8,15 +8,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mincorn.capstone.presentation.join.JoinActivity
 import com.mincorn.capstone.presentation.join.LoginActivity
-import com.mincorn.capstone.presentation.main.HomeScreen
 import com.mincorn.capstone.presentation.main.MediaPipeCheck
-import com.mincorn.capstone.presentation.main.Reciepick
-import com.mincorn.capstone.presentation.main.SearchScreen
-import com.mincorn.capstone.presentation.main.StorageScreen
+import com.mincorn.capstone.presentation.main.Recipick
 import com.mincorn.capstone.presentation.main.TypeDetail
 import com.mincorn.capstone.presentation.main.AddCamera
-import com.mincorn.capstone.presentation.recipick.PickReciepick
-import com.mincorn.capstone.presentation.recipick.SearchReciepick
+import com.mincorn.capstone.presentation.recipick.PickRecipick
+import com.mincorn.capstone.presentation.recipick.SearchRecipick
 
 @Composable
 fun NavGraph (
@@ -28,8 +25,8 @@ fun NavGraph (
         navController = navController,
         startDestination = startPage
     ) {
-        composable ("Reciepick") {
-            Reciepick(navController)
+        composable ("Recipick") {
+            Recipick(navController)
         }
         composable ("AddCamera") {
             AddCamera(navController)
@@ -38,7 +35,7 @@ fun NavGraph (
             MediaPipeCheck(navController, "", "", "")
         }
         composable (
-            route = "PickReciepick/{pickName}/{imageUrl}",
+            route = "PickRecipick/{pickName}/{imageUrl}",
             arguments = listOf(
                 navArgument("pickName") { type = NavType.StringType },
                 navArgument("imageUrl") { type = NavType.StringType }
@@ -47,19 +44,16 @@ fun NavGraph (
             val pickName = backStackEntry.arguments?.getString("pickName") ?: ""
             val imageUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
 
-            PickReciepick(navController, pickName, imageUrl)
+            PickRecipick(navController, pickName, imageUrl)
         }
-        composable ("SearchReciepick") {
-            SearchReciepick(navController)
+        composable ("SearchRecipick") {
+            SearchRecipick(navController)
         }
         composable ("JoinActivity") {
             JoinActivity(navController)
         }
         composable ("LoginActivity") {
             LoginActivity(navController)
-        }
-        composable ("TypeDetail") {
-            TypeDetail(navController, "", "", "", "")
         }
     }
 }

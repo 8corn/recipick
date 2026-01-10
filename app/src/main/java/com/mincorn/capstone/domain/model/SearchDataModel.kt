@@ -1,5 +1,6 @@
 package com.mincorn.capstone.domain.model
 
+import com.mincorn.capstone.domain.respository.RecipeRepository
 import javax.inject.Inject
 
 data class Recipe(
@@ -12,12 +13,6 @@ data class RecipeDetail(
     val ingredients: String,
     val instructions: String
 )
-
-interface RecipeRepository {
-    suspend fun getRecommendations(ingredients: List<String>): List<Recipe>
-
-    suspend fun getRecipeDetail(name: String): RecipeDetail
-}
 
 class GetRecipeRecommendationUseCase @Inject constructor(
     private val repository: RecipeRepository

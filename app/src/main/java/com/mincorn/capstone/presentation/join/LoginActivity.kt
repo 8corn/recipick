@@ -75,7 +75,7 @@ fun LoginActivity(
 
     LaunchedEffect(authViewModel.loginSuccess) {
         if (authViewModel.loginSuccess) {
-            navController.navigate("Reciepick") {
+            navController.navigate("Recipick") {
                 popUpTo("LoginActivity") {
                     inclusive = true
                 }
@@ -160,7 +160,7 @@ fun LoginActivity(
                             .signInWithEmailAndPassword(id.trim(), pw.trim())
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
-                                    navController.navigate("Reciepick") {
+                                    navController.navigate("Recipick") {
                                         popUpTo("LoginActivity") {
                                             inclusive = true
                                         }

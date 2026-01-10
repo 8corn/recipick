@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 
 class Gemini(apiKey: String) {
     private var generativeModel = GenerativeModel(
-        modelName = "gemini-3-flash",
+        modelName = "gemini-2.0-flash",
         apiKey = apiKey
     )
 

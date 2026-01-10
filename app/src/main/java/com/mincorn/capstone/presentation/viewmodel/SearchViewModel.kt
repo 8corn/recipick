@@ -11,7 +11,6 @@ import com.mincorn.capstone.domain.model.GetRecipeDetailUseCase
 import com.mincorn.capstone.domain.model.GetRecipeRecommendationUseCase
 import com.mincorn.capstone.domain.model.Recipe
 import com.mincorn.capstone.domain.model.RecipeDetail
-import com.mincorn.capstone.domain.model.RecipeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,8 +27,6 @@ class SearchViewModel @Inject constructor(
         private set
     var isRefreshing by mutableStateOf(false)
         private set
-
-
 
     fun loadDetailRecipe(name: String) {
         viewModelScope.launch {

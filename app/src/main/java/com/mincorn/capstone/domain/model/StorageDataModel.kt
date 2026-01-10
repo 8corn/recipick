@@ -1,5 +1,6 @@
 package com.mincorn.capstone.domain.model
 
+import com.mincorn.capstone.domain.respository.StorageRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -9,12 +10,6 @@ data class SavedRecipe(
     val recipe: String,
     val image: String,
 )
-
-interface StorageRepository {
-    fun getSavedRecipes(uid: String): Flow<List<SavedRecipe>>
-    suspend fun deleteRecipe(uid: String, recipe: SavedRecipe)
-    suspend fun saveRecipe(uid: String, recipe: SavedRecipe)
-}
 
 class GetSavedRecipesUseCase @Inject constructor(
     private val repository: StorageRepository
@@ -29,5 +24,13 @@ class SaveRecipeUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(uid: String, recipe: SavedRecipe) {
         repository.saveRecipe(uid, recipe)
+    }
+}
+
+class DeleteRecipeUseCase @Inject constructor(
+    private val repository: StorageRepository
+) {
+    suspend operator fun invoke(uid: String, recipe: SavedRecipe) {
+        repository.deleteRecipe(uid, recipe)
     }
 }
