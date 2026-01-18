@@ -76,7 +76,7 @@ dependencies {
     kapt (libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    implementation(libs.tensorflow.lite.task.vision.play.services)
+    implementation(libs.tensorflow.lite.task.vision)
     implementation(libs.play.services.tflite.gpu)
 
     implementation(libs.androidx.core.ktx)

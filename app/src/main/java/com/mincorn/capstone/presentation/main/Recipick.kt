@@ -50,26 +50,6 @@ fun Recipick(
             composable("storage") {
                 StorageScreen(bottomNavController)
             }
-
-            composable(
-                route = "typeDetail/{typeName}",
-                arguments = listOf(navArgument("typeName") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val typeName = backStackEntry.arguments?.getString("typeName") ?: ""
-
-                val detectionViewModel: DetectionViewModel = hiltViewModel()
-
-                TypeDetail(
-                    navController = bottomNavController,
-                    onCameraClick = {
-                        navController.navigate("AddCamera")
-                    },
-                    typeName = typeName,
-                    imageUri = detectionViewModel.detectedImageUri,
-                    name = detectionViewModel.detectedName,
-                    count = detectionViewModel.detectedCount,
-                )
-            }
         }
     }
 }

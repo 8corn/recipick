@@ -1,5 +1,6 @@
 package com.mincorn.capstone.data.di
 
+import com.mincorn.capstone.data.repository.FakeImageRepository
 import com.mincorn.capstone.data.repository.ImageRepositoryImpl
 import com.mincorn.capstone.data.repository.RecipeRepositoryImpl
 import com.mincorn.capstone.data.repository.StorageRepositoryImpl
@@ -27,9 +28,15 @@ abstract class RepositoryModule {
         recipeRepositoryImpl: RecipeRepositoryImpl
     ): RecipeRepository
 
+//    @Binds
+//    @Singleton
+//    abstract fun bindImageRepository(
+//        imageRepositoryImpl: ImageRepositoryImpl
+//    ): ImageRepository
+
     @Binds
     @Singleton
-    abstract fun bindImageRepository(
-        imageRepositoryImpl: ImageRepositoryImpl
+    abstract fun bindFakeImageRepository(
+        imageRepository: FakeImageRepository
     ): ImageRepository
 }

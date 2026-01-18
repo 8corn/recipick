@@ -1,6 +1,7 @@
 package com.mincorn.capstone.presentation.nav
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +15,7 @@ import com.mincorn.capstone.presentation.main.TypeDetail
 import com.mincorn.capstone.presentation.main.AddCamera
 import com.mincorn.capstone.presentation.recipick.PickRecipick
 import com.mincorn.capstone.presentation.recipick.SearchRecipick
+import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 
 @Composable
 fun NavGraph (
@@ -54,6 +56,25 @@ fun NavGraph (
         }
         composable ("LoginActivity") {
             LoginActivity(navController)
+        }
+        composable(
+            route = "typeDetail/{typeName}",
+            arguments = listOf(navArgument("typeName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val typeName = backStackEntry.arguments?.getString("typeName") ?: ""
+
+            val detectionViewModel: DetectionViewModel = hiltViewModel()
+
+            TypeDetail(
+                navController = navController,
+                onCameraClick = {
+                    navController.navigate("AddCamera")
+                },
+                typeName = typeName,
+                imageUri = detectionViewModel.detectedImageUri,
+                name = detectionViewModel.detectedName,
+                count = detectionViewModel.detectedCount,
+            )
         }
     }
 }

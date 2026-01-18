@@ -62,9 +62,10 @@ fun AddCamera (
     detectionViewModel: DetectionViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_BACK) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
+
+    var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_BACK) }
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
     var showUrlDialog by remember { mutableStateOf(false) }
 
@@ -91,29 +92,39 @@ fun AddCamera (
         if (!hasCameraPermission) {
             launcher.launch(Manifest.permission.CAMERA)
         }
+
+        detectionViewModel.prepareAi()
     }
 
-    LaunchedEffect(lensFacing) {
-        val cameraProvider = ProcessCameraProvider.getInstance(context).get()
+    LaunchedEffect(lensFacing, hasCameraPermission) {
+        if (!hasCameraPermission) return@LaunchedEffect
 
-        val preview = Preview.Builder().build().also {
-            it.surfaceProvider = previewView.surfaceProvider
-        }
+        val cameraProviders = ProcessCameraProvider.getInstance(context)
 
-        val capture = ImageCapture.Builder().build()
-        imageCapture = capture
+        cameraProviders.addListener({
+            try {
+                val cameraProvider = cameraProviders.get()
 
-        try {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.Builder().requireLensFacing(lensFacing).build(),
-                preview,
-                capture
-            )
-        } catch (e: Exception) {
-            Log.e("Camera", "카메라 바인딩 실패", e)
-        }
+                val preview = Preview.Builder().build().also {
+                    it.surfaceProvider = previewView.surfaceProvider
+                }
+
+                val capture = ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
+                imageCapture = capture
+
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    CameraSelector.Builder().requireLensFacing(lensFacing).build(),
+                    preview,
+                    capture
+                )
+                Log.d("AddCamera", "카메라 바인딩 성공: $lensFacing")
+            } catch (e: Exception) {
+                Log.e("AddCamera", "카메라 바인딩 실패", e)
+                Toast.makeText(context, "카메라를 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
     if (showUrlDialog) {
@@ -238,9 +249,8 @@ fun AddCamera (
                                         context.cacheDir,
                                         "photo_${System.currentTimeMillis()}.jpg"
                                     )
-                                    val outputOptions =
-                                        ImageCapture.OutputFileOptions.Builder(photoFile)
-                                            .build()
+                                    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
                                     capture.takePicture(
                                         outputOptions,
                                         ContextCompat.getMainExecutor(context),
@@ -251,16 +261,27 @@ fun AddCamera (
                                                 val route = detectionViewModel.processImageAndGetRoute(photoFile)
 
                                                 ContextCompat.getMainExecutor(context).execute {
-                                                    navController.navigate(route) {
-                                                        popUpTo("AddCamera") {
-                                                            inclusive = true
+                                                    if (route.isEmpty()) {
+                                                        Toast.makeText(context, "식재료를 인식하지 못했습니다. 다시 찍어주세요.",Toast.LENGTH_LONG).show()
+
+                                                        return@execute
+                                                    }
+                                                    try {
+                                                        navController.navigate(route) {
+                                                            popUpTo("AddCamera") {
+                                                                inclusive = true
+                                                            }
                                                         }
+                                                    } catch (e: Exception) {
+                                                        Log.e("Navigation", "경로 이동 실패: $route", e)
+                                                        Toast.makeText(context, "분석 결과를 표시할 수 없습니다.\n다시 시도해주세요.",Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
                                             }
 
                                             override fun onError(exception: ImageCaptureException) {
                                                 Log.e("Camera", "사진 전송 실패", exception)
+                                                Toast.makeText(context, "사진 촬영에 실패하였습니다.",Toast.LENGTH_SHORT).show()
                                             }
                                         }
                                     )

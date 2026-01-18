@@ -13,6 +13,7 @@ import com.mincorn.capstone.domain.respository.ImageRepository
 import com.mincorn.capstone.domain.until.IngredientMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URLEncoder
@@ -27,9 +28,9 @@ class DetectionViewModel @Inject constructor(
 
     private val analyzer = ImageAnalyzer(context)
 
-    init {
-        analyzer.setupClassifier()
-    }
+//    init {
+//        analyzer.setupClassifier()
+//    }
     var resultText by mutableStateOf("")
     private set
 
@@ -43,13 +44,20 @@ class DetectionViewModel @Inject constructor(
     var detectedCount by mutableStateOf("")
     var detectedImageUri by mutableStateOf("")
 
+
+    fun prepareAi() {
+        viewModelScope.launch {
+            delay(1000)
+            analyzer.setupClassifier()
+        }
+    }
+
     fun processImageAndGetRoute(photoFile: File): String {
         val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
         val resultName = analyzer.analyze(bitmap)
         val category = IngredientMapper.getCategory(resultName)
-        val encodedCategory = URLEncoder.encode(category, "UTF-8")
 
-        return "typeDetail/$encodedCategory"
+        return if (category.isEmpty()) "" else "typeDetail/$category"
     }
 
     fun getStoredUrl(): String = preferenceManager.getNgrokUrl()
