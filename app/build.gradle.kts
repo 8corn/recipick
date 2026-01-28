@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.naver.login)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.gson)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.camerax.core)
     implementation(libs.camerax.camera2)

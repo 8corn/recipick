@@ -1,8 +1,12 @@
 package com.mincorn.capstone.presentation.main
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,25 +28,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mincorn.capstone.R
+import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @Composable
 fun TypeDetail(
     navController: NavController,
+    detectionViewModel: DetectionViewModel = hiltViewModel(),
     onCameraClick: () -> Unit,
     typeName: String,
     imageUri: String,
     name: String,
     count: String
 ) {
-    var nameState by remember { mutableStateOf(name) }
-    var countState by remember { mutableStateOf(count) }
+    val filteredItems = detectionViewModel.detectedIngredient.filter {
+        it.category == typeName
+    }
+
+    LaunchedEffect(Unit) {
+        detectionViewModel.fetchFakeResult()
+    }
 
     Surface (
         color = Color.White
@@ -49,7 +65,6 @@ fun TypeDetail(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
         ) {
             Box(
                 modifier = Modifier
@@ -85,22 +100,55 @@ fun TypeDetail(
                 color = Color(0xFF868686)
             )
 
-            AsyncImage(
-                model = imageUri,
-                contentDescription = "재료 이미지",
+            Column (
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp),
-                contentScale = ContentScale.Crop
-            )
+                    .verticalScroll(rememberScrollState())
+            ) {
+                detectionViewModel.detectedItems.forEach{ itemName ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(90.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model = R.drawable.vmon,
+//                    model = imageUri,
+                            contentDescription = "재료 이미지",
+                            modifier = Modifier
+                                .padding(horizontal = 20.dp)
+                                .size(50.dp),
+                            contentScale = ContentScale.Crop
+                        )
 
-            Text(
-                text = nameState,
-            )
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 5.dp)
+                        ) {
+                            Text(
+                                text = itemName,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
 
-            Text(
-                text = countState
-            )
+                            Spacer(modifier = Modifier.padding(vertical = 5.dp))
+
+                            Text(
+                                text = detectionViewModel.detectedCount,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 5.dp, horizontal = 30.dp),
+                        thickness = 1.dp,
+                        color = Color(0xFF868686)
+                    )
+                }
+            }
         }
     }
 }

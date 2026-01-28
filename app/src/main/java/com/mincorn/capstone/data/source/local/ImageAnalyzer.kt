@@ -4,11 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.core.graphics.scale
-import com.google.android.gms.tflite.java.TfLite
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier
 
@@ -34,7 +29,7 @@ class ImageAnalyzer (
             )
 
             isInitialized = true
-            Log.d("TFLite", "모델 로드 성공!")
+            Log.d("TFLite", "식재료 모델 로드 성공!")
         } catch (e: Exception) {
             Log.e("TFLite", "모델 로드 실패: ${e.message}")
             isInitialized = false
@@ -51,11 +46,19 @@ class ImageAnalyzer (
         return try {
             val resizedBitmap = bitmap.scale(224, 224)
             val image = TensorImage.fromBitmap(resizedBitmap)
-
             val results = classifier.classify(image)
-            results?.firstOrNull()?.categories?.firstOrNull()?.label ?: "Unknown"
+
+            val topResult =  results?.firstOrNull()?.categories?.firstOrNull()
+
+            if (topResult != null) {
+                Log.d("ImageAnalyzer/TFLite", "인식 결과: ${topResult.label}(${topResult.score})")
+                topResult.label
+            } else {
+                "알 수 없음"
+            }
+
         } catch (e: Exception) {
-            Log.e("TFLite", "추론 중 에러 발생: ${e.message}")
+            Log.e("ImageAnalyzer/TFLite", "에러 발생: ${e.message}")
             "Error"
         }
     }

@@ -105,7 +105,7 @@ fun HomeScreen(
                                 .padding(bottom = 14.dp)
                                 .fillMaxWidth()
                                 .clickable {
-                                    val encodedTypeName = URLEncoder.encode(type.name, "UTF-8")
+                                    val encodedTypeName = URLEncoder.encode(type.name, "UTF-8").replace("+", "%20")
                                     navController.navigate("typeDetail/$encodedTypeName")
                                 },
                             horizontalAlignment = Alignment.CenterHorizontally

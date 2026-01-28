@@ -32,6 +32,7 @@ kakao-all = "2.20.1"
 naver-login = "5.11.1"
 retrofit = "3.0.0"
 gsonConverter = "3.0.0"
+gson = "2.13.2"
 okhttpLogging = "5.3.2"
 
 [libraries]
@@ -79,6 +80,7 @@ kakao-all = {group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao-all"
 naver-login = {group = "com.navercorp.nid", name = "oauth", version.ref = "naver-login"}
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "gsonConverter" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttpLogging" }
 
 [plugins]
