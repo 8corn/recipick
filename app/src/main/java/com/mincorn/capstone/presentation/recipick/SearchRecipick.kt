@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.mincorn.capstone.R
+import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
 
 @Composable
 fun SearchRecipick(

@@ -1,6 +1,8 @@
 package com.mincorn.capstone.data.source.remote
 
+import android.graphics.Bitmap
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -10,9 +12,18 @@ class Gemini(apiKey: String) {
         apiKey = apiKey
     )
 
-    suspend fun generateText(prompt: String): String = withContext(Dispatchers.IO) {
+    suspend fun generateText(prompt: String, bitmap: Bitmap? = null): String = withContext(Dispatchers.IO) {
         try {
-            val response = generativeModel.generateContent(prompt)
+            val response = if (bitmap != null) {
+                val inputContent = content {
+                    image(bitmap)
+                    text(prompt)
+                }
+                generativeModel.generateContent(inputContent)
+            } else {
+                generativeModel.generateContent(prompt)
+            }
+
             response.text ?: "응답이 없습니다."
         } catch (e: Exception) {
             "에러: ${e.localizedMessage}"

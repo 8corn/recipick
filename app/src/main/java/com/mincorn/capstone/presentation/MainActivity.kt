@@ -18,8 +18,8 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             NavGraph(
-//                startPage = "LoginActivity"
-                startPage = "Recipick"
+                startPage = "LoginActivity"
+//                startPage = "Recipick"
             )
         }
     }

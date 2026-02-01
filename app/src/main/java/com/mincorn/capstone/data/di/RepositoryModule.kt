@@ -28,15 +28,15 @@ abstract class RepositoryModule {
         recipeRepositoryImpl: RecipeRepositoryImpl
     ): RecipeRepository
 
-//    @Binds
-//    @Singleton
-//    abstract fun bindImageRepository(
-//        imageRepositoryImpl: ImageRepositoryImpl
-//    ): ImageRepository
-
     @Binds
     @Singleton
-    abstract fun bindFakeImageRepository(
-        imageRepository: FakeImageRepository
+    abstract fun bindImageRepository(
+        imageRepositoryImpl: ImageRepositoryImpl
     ): ImageRepository
+
+//    @Binds
+//    @Singleton
+//    abstract fun bindFakeImageRepository(
+//        imageRepository: FakeImageRepository
+//    ): ImageRepository
 }

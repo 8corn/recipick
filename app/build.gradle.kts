@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.firestore)
     implementation(libs.generativeai)
     implementation(libs.kakao.all)
     implementation(libs.naver.login)

@@ -28,13 +28,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.uiModel.Type
+import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import java.net.URLEncoder
 
 @Composable
 fun HomeScreen(
     navController: NavController,
+    detectionViewModel: DetectionViewModel,
     onCameraClick: () -> Unit
 ) {
     val types = listOf(
@@ -104,14 +107,17 @@ fun HomeScreen(
                                 .padding(14.dp)
                                 .padding(bottom = 14.dp)
                                 .fillMaxWidth()
-                                .clickable {
+                                .clickable (
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
                                     val encodedTypeName = URLEncoder.encode(type.name, "UTF-8").replace("+", "%20")
                                     navController.navigate("typeDetail/$encodedTypeName")
                                 },
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Image(
-                                painter = painterResource(type.image),
+                            AsyncImage(
+                                model = type.image,
                                 contentDescription = "타입 아이콘",
                                 modifier = Modifier.size(64.dp)
                             )

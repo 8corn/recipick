@@ -18,7 +18,8 @@ import java.nio.charset.StandardCharsets
 
 @Composable
 fun Recipick(
-    navController: NavController
+    navController: NavController,
+    detectionViewModel: DetectionViewModel
 ) {
     val bottomNavController = rememberNavController()
 
@@ -33,6 +34,7 @@ fun Recipick(
             composable("home") {
                 HomeScreen(
                     navController = navController,
+                    detectionViewModel = detectionViewModel,
                     onCameraClick = {
                         navController.navigate("AddCamera")
                     }

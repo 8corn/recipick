@@ -2,7 +2,7 @@ package com.mincorn.capstone.data.repository
 
 const val CATEGORIES = "정육/계란, 채소, 과일, 수산, 간편식품, 조미료, 베이커리, 유제품, 기타"
 
-const val PROMPT_TEXT = """
+val PROMPT_TEXT = """
         사진 속에 있는 식재료들을 분석해서 다음 JSON 형식의 리스트로 응답해줘.
         카테고리는 반드시 다음 리스트 중 하나여야 해: [$CATEGORIES]
         

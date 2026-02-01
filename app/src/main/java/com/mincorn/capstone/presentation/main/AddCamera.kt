@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +63,8 @@ fun AddCamera (
     detectionViewModel: DetectionViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val apiKey = stringResource(R.string.gemini)
+
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
 
@@ -244,6 +247,9 @@ fun AddCamera (
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
                             ) {
+                                Toast.makeText(context, "이미지 분석 중입니다.", Toast.LENGTH_LONG).show()
+                                Log.d("AddCamera", "이미지 분석 중입니다.")
+
                                 imageCapture?.let { capture ->
                                     val photoFile = File(
                                         context.cacheDir,
@@ -258,25 +264,36 @@ fun AddCamera (
                                             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                                                 Log.d("Camera", "사진 찍음: ${photoFile.absolutePath}")
 
-                                                val route = detectionViewModel.processImageAndGetRoute(photoFile)
-
-                                                ContextCompat.getMainExecutor(context).execute {
-                                                    if (route.isEmpty()) {
-                                                        Toast.makeText(context, "식재료를 인식하지 못했습니다. 다시 찍어주세요.",Toast.LENGTH_LONG).show()
-
-                                                        return@execute
-                                                    }
-                                                    try {
-                                                        navController.navigate(route) {
-                                                            popUpTo("AddCamera") {
-                                                                inclusive = true
-                                                            }
+                                                detectionViewModel.analyzeWithGemini(
+                                                    apiKey = apiKey,
+                                                    photoFile = photoFile
+                                                ) { route ->
+                                                    navController.navigate(route) {
+                                                        popUpTo("AddCamera") {
+                                                            inclusive = true
                                                         }
-                                                    } catch (e: Exception) {
-                                                        Log.e("Navigation", "경로 이동 실패: $route", e)
-                                                        Toast.makeText(context, "분석 결과를 표시할 수 없습니다.\n다시 시도해주세요.",Toast.LENGTH_SHORT).show()
                                                     }
                                                 }
+
+//                                                val route = detectionViewModel.processImageAndGetRoute(photoFile)
+//
+//                                                ContextCompat.getMainExecutor(context).execute {
+//                                                    if (route.isEmpty()) {
+//                                                        Toast.makeText(context, "식재료를 인식하지 못했습니다. 다시 찍어주세요.",Toast.LENGTH_LONG).show()
+//
+//                                                        return@execute
+//                                                    }
+//                                                    try {
+//                                                        navController.navigate(route) {
+//                                                            popUpTo("AddCamera") {
+//                                                                inclusive = true
+//                                                            }
+//                                                        }
+//                                                    } catch (e: Exception) {
+//                                                        Log.e("Navigation", "경로 이동 실패: $route", e)
+//                                                        Toast.makeText(context, "분석 결과를 표시할 수 없습니다.\n다시 시도해주세요.",Toast.LENGTH_SHORT).show()
+//                                                    }
+//                                                }
                                             }
 
                                             override fun onError(exception: ImageCaptureException) {

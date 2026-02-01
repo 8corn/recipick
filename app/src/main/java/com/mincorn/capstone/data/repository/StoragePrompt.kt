@@ -1,6 +1,7 @@
 package com.mincorn.capstone.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.mincorn.capstone.domain.model.DetectedIngredient
 import com.mincorn.capstone.domain.model.SavedRecipe
 import com.mincorn.capstone.domain.respository.StorageRepository
 import kotlinx.coroutines.channels.awaitClose
@@ -59,6 +60,27 @@ class StorageRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    override fun getIngredients(uid: String): Flow<List<DetectedIngredient>> = callbackFlow {
+        val subscription = firestore.collection("user")
+            .document(uid)
+            .collection("ingredients")
+            .addSnapshotListener { snapshot, _ ->
+                val items = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(DetectedIngredient::class.java)
+                } ?: emptyList()
+                trySend(items)
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    override suspend fun saveIngredient(uid: String, ingredient: DetectedIngredient) {
+        firestore.collection("user")
+            .document(uid)
+            .collection("ingredients")
+            .add(ingredient)
+            .await()
     }
 }
 

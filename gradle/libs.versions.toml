@@ -22,7 +22,7 @@ playServicesTfliteGpu = "16.4.0"
 
 coil = "2.7.0"
 googleGmsGoogleServices = "4.4.4"
-firebaseBom = "33.5.0"
+firebaseBom = "34.8.0"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
@@ -74,7 +74,7 @@ androidx-credentials = { group = "androidx.credentials", name = "credentials", v
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
-firebase-firestore-ktx = {group = "com.google.firebase", name = "firebase-firestore-ktx"}
+firebase-firestore = {group = "com.google.firebase", name = "firebase-firestore"}
 generativeai = {group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai"}
 kakao-all = {group = "com.kakao.sdk", name = "v2-all", version.ref = "kakao-all"}
 naver-login = {group = "com.navercorp.nid", name = "oauth", version.ref = "naver-login"}

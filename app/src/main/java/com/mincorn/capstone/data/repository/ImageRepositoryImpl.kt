@@ -1,5 +1,6 @@
 package com.mincorn.capstone.data.repository
 
+import android.util.Log
 import com.google.gson.Gson
 import com.mincorn.capstone.data.source.local.PreferenceManager
 import com.mincorn.capstone.data.source.remote.response.DetectionResponse
@@ -20,8 +21,14 @@ class ImageRepositoryImpl @Inject constructor(
     private val preferenceManager: PreferenceManager
 ): ImageRepository {
     override suspend fun uploadImage(imageFile: File): String = withContext(Dispatchers.IO){
-        val baseUrl = preferenceManager.getNgrokUrl().removeSuffix("/")
+        var baseUrl = preferenceManager.getNgrokUrl().trim().removeSuffix("/")
+
+        if (!baseUrl.startsWith("http")) {
+            baseUrl = "https://$baseUrl"
+        }
+
         val url = "$baseUrl/upload-image/"
+        Log.d("ImageRepository", "업로드 URL: $url")
 
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -37,16 +44,12 @@ class ImageRepositoryImpl @Inject constructor(
             .build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("에러 발생: $response")
+            if (!response.isSuccessful) throw IOException("서버 응답 에러 발생: $response")
 
-            val jsonString = response.body.string()
-            val result = Gson().fromJson(jsonString, DetectionResponse::class.java)
+            val finalImageUrl = "$baseUrl/static/${imageFile.name}"
+            Log.d("ImageRepository", "저장된 이미지 경로: $finalImageUrl")
 
-            val objectList = result.objects?.joinToString("\n") {
-                "${it.label} (${(it.confidence * 100).toInt()}%)"
-            } ?: "검색된 결과가 없습니다."
-
-            "${result.message}\n\n[탐지된 자료]\n$objectList"
+            return@withContext finalImageUrl
         }
     }
 }

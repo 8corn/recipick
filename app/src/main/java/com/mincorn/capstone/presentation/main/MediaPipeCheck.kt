@@ -64,7 +64,9 @@ fun MediaPipeCheck(
             OutlinedTextField(
                 value = nameState,
                 onValueChange = { nameState = it },
-                label = { Text("이름") },
+                label = {
+                    Text("이름")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
             )
@@ -72,7 +74,9 @@ fun MediaPipeCheck(
             OutlinedTextField(
                 value = countState,
                 onValueChange = { countState = it },
-                label = { Text("갯수") },
+                label = {
+                    Text("갯수")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
             )
