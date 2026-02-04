@@ -79,7 +79,8 @@ class StorageRepositoryImpl @Inject constructor(
         firestore.collection("user")
             .document(uid)
             .collection("ingredients")
-            .add(ingredient)
+            .document(ingredient.name)
+            .set(ingredient)
             .await()
     }
 }

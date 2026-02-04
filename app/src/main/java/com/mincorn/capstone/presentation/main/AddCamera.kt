@@ -26,11 +26,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,7 +52,6 @@ import androidx.navigation.NavController
 import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import java.io.File
-import java.net.URLEncoder
 
 @Composable
 fun AddCamera (
@@ -70,7 +66,6 @@ fun AddCamera (
 
     var lensFacing by remember { mutableIntStateOf(CameraSelector.LENS_FACING_BACK) }
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
-    var showUrlDialog by remember { mutableStateOf(false) }
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -130,40 +125,6 @@ fun AddCamera (
         }, ContextCompat.getMainExecutor(context))
     }
 
-    if (showUrlDialog) {
-        var tempUrl by remember { mutableStateOf(detectionViewModel.getStoredUrl()) }
-        AlertDialog(
-            onDismissRequest = { showUrlDialog = false },
-            title = {
-                Text(
-                    text = "서버 주소 설정"
-                )
-            },
-            text = {
-                TextField(
-                    value = tempUrl,
-                    onValueChange = { tempUrl = it },
-                    placeholder = {
-                        Text(
-                            "https://your-ngrok.app"
-                        )
-                    }
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        detectionViewModel.updateUrl(tempUrl)
-                        showUrlDialog = false
-                }) {
-                    Text(
-                        text = "저장",
-                    )
-                }
-            }
-        )
-    }
-
     Surface(
         color = Color.White
     ) {
@@ -203,12 +164,6 @@ fun AddCamera (
                         color = Color.Black,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                showUrlDialog = true
-                            }
                     )
                 }
             }

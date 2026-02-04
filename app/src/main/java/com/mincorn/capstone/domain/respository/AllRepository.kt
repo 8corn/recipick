@@ -23,3 +23,8 @@ interface StorageRepository {
     fun getIngredients(uid: String): Flow<List<DetectedIngredient>>
     suspend fun saveIngredient(uid: String, ingredient: DetectedIngredient)
 }
+
+interface UserRepository {
+    suspend fun saveUser(uid: String, aka: String, email: String, provider: String)
+    suspend fun isUserExists(email: String): String?
+}

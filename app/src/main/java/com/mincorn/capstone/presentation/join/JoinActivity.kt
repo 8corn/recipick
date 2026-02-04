@@ -50,6 +50,15 @@ fun JoinActivity(
     val (pwCheck, setPwCheck) = remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val (pwErrorText, setPwErrorText) = remember { mutableStateOf<String?>(null) }
+    val (pwCheckErrorText, setCheckPwErrorText) = remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(authViewModel.errorMessage) {
+        authViewModel.errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+            authViewModel.clearError()
+        }
+    }
 
     LaunchedEffect(authViewModel.loginSuccess) {
         if (authViewModel.loginSuccess) {
@@ -174,7 +183,14 @@ fun JoinActivity(
                 )
                 TextField(
                     value = pw,
-                    onValueChange = setPw,
+                    onValueChange = {
+                        setPw(it)
+                        if (it.length > 0 && it.length < 8) {
+                            setPwErrorText("비밀번호는 8자리 이상이어야 합니다.")
+                        } else {
+                            setPwErrorText(null)
+                        }
+                    },
                     visualTransformation = PasswordVisualTransformation('\u2022'),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -191,6 +207,14 @@ fun JoinActivity(
                         unfocusedIndicatorColor = Color.Transparent,
                     )
                 )
+                if (pwErrorText != null) {
+                    Text(
+                        text = pwErrorText,
+                        color = Color.Red,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(top = 4.dp, start = 10.dp)
+                    )
+                }
                 Text(
                     text = "비밀번호 확인",
                     fontSize = 15.sp,
@@ -203,7 +227,7 @@ fun JoinActivity(
                     visualTransformation = PasswordVisualTransformation('\u2022'),
                     onValueChange = {
                         setPwCheck(it)
-                        setPwErrorText(if (pw != it) "비밀번호가 일치하지 않습니다." else null)
+                        setCheckPwErrorText(if (pw != it) "비밀번호가 일치하지 않습니다." else null)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -211,7 +235,7 @@ fun JoinActivity(
                         .padding(top = 2.dp)
                         .border(
                             1.dp,
-                            if (pwErrorText != null) Color.Red else Color(0xFF868686),
+                            if (pwCheckErrorText != null) Color.Red else Color(0xFF868686),
                             RoundedCornerShape(19.dp)
                         ),
                     singleLine = true,
@@ -223,7 +247,7 @@ fun JoinActivity(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                     ),
-                    isError = pwErrorText != null
+                    isError = pwCheckErrorText != null
                 )
                 Text(
                     text = "비밀번호는 소문자 및 순자로 8자리 이상 입력해주세요.",
@@ -233,9 +257,9 @@ fun JoinActivity(
                         .padding(top = 3.dp, start = 10.dp)
                 )
 
-                if (pwErrorText != null) {
+                if (pwCheckErrorText != null) {
                     Text(
-                        text = pwErrorText,
+                        text = pwCheckErrorText,
                         color = Color.Red,
                         fontSize = 10.sp,
                         modifier = Modifier.padding(top = 4.dp, start = 10.dp)
@@ -262,8 +286,14 @@ fun JoinActivity(
                                     return@Button
                                 }
 
+                                if (pw.length < 8) {
+                                    setPwErrorText("비밀번호를 8자리 이상 입력해주세요.")
+                                    Toast.makeText(context, "비밀번호를 8자리 이상 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+
                                 if (pw != pwCheck) {
-                                    setPwErrorText("비밀번호가 일치하지 않습니다.")
+                                    setCheckPwErrorText("비밀번호가 일치하지 않습니다.")
                                     Toast.makeText(context, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }

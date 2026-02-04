@@ -1,12 +1,13 @@
 package com.mincorn.capstone.data.di
 
-import com.mincorn.capstone.data.repository.FakeImageRepository
 import com.mincorn.capstone.data.repository.ImageRepositoryImpl
 import com.mincorn.capstone.data.repository.RecipeRepositoryImpl
 import com.mincorn.capstone.data.repository.StorageRepositoryImpl
+import com.mincorn.capstone.data.repository.UserRepositoryImpl
 import com.mincorn.capstone.domain.respository.ImageRepository
 import com.mincorn.capstone.domain.respository.RecipeRepository
 import com.mincorn.capstone.domain.respository.StorageRepository
+import com.mincorn.capstone.domain.respository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -34,9 +35,9 @@ abstract class RepositoryModule {
         imageRepositoryImpl: ImageRepositoryImpl
     ): ImageRepository
 
-//    @Binds
-//    @Singleton
-//    abstract fun bindFakeImageRepository(
-//        imageRepository: FakeImageRepository
-//    ): ImageRepository
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        userRepositoryImpl: UserRepositoryImpl
+    ): UserRepository
 }

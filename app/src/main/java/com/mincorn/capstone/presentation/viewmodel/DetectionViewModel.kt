@@ -10,12 +10,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.mincorn.capstone.data.repository.PROMPT_TEXT
 import com.mincorn.capstone.data.source.local.ImageAnalyzer
-import com.mincorn.capstone.data.source.local.PreferenceManager
 import com.mincorn.capstone.data.source.remote.Gemini
 import com.mincorn.capstone.domain.model.DetectedIngredient
 import com.mincorn.capstone.domain.respository.ImageRepository
@@ -32,8 +30,6 @@ import javax.inject.Inject
 @HiltViewModel
 class DetectionViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val preferenceManager: PreferenceManager,
-    private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
     private val storageRepository: StorageRepository,
     private val imageRepository: ImageRepository,
@@ -59,6 +55,10 @@ class DetectionViewModel @Inject constructor(
 
     private val gson = Gson()
 
+    init {
+        loadIngredients()
+    }
+
 
     fun prepareAi() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -67,13 +67,8 @@ class DetectionViewModel @Inject constructor(
         }
     }
 
-    fun getStoredUrl(): String = preferenceManager.getNgrokUrl()
-
-    fun updateUrl(newUrl: String) {
-        preferenceManager.setNgrokUrl(newUrl)
-    }
-
     fun analyzeWithGemini(apiKey: String, photoFile: File, onComplete: (String) -> Unit) {
+
         viewModelScope.launch {
             try {
                 currentImage = photoFile.absolutePath
@@ -92,7 +87,7 @@ class DetectionViewModel @Inject constructor(
                     val parse = parseJsonToIngredients(jsonResult)
 
                     parse.forEach { item ->
-                        Log.d("Gemini_result", "분석된 재료: 이름: ${item.name}, 카테고리: ${item.category}, 개수: ${item.count}")
+                        Log.d("Gemini_result", "분석된 재료: 이름: ${item.name}, 카테고리: ${item.category}, 갯수: ${item.count}")
                     }
 
                     val uid = auth.currentUser?.uid
@@ -109,18 +104,16 @@ class DetectionViewModel @Inject constructor(
                     parse
                 }
 
-
                 detectedIngredient = result
                 isLoading = false
-
-                loadMyFridge()
 
                 val firstCategory = result.firstOrNull()?.category ?: "기타"
                 onComplete("typeDetail/$firstCategory")
                 Log.d("Gemini", "5. 화면 이동 명령 전송")
 
             } catch (e: Exception) {
-                Log.e("Gemini", "분석/저장 실패", e)
+                e.printStackTrace()
+                Log.e("Gemini", "분석/저장 실패: ${e.message}")
                 errorMessage = "Gemini 분석 실패: ${e.localizedMessage}"
                 isLoading = false
             }
@@ -129,20 +122,25 @@ class DetectionViewModel @Inject constructor(
 
     private fun parseJsonToIngredients(jsonString: String): List<DetectedIngredient> {
         return try {
-            val cleanJson = jsonString.replace("```json", "").replace("```", "").trim()
+            val pattern = Regex("\\[[\\s\\S]*]")
+            val match = pattern.find(jsonString)?.value ?: jsonString
+            val cleanJson = match.replace("```json", "").replace("```", "").trim()
+
             val itemType = object : TypeToken<List<DetectedIngredient>>() {}.type
             gson.fromJson(cleanJson, itemType)
         } catch (e: Exception) {
+            Log.e("DetectionVM/Parse", "JSON 파싱 에러: $jsonString")
             emptyList()
         }
     }
 
-    fun loadMyFridge() {
+    private fun loadIngredients() {
         val uid = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {
             try {
                 storageRepository.getIngredients(uid).collect { list ->
+                    detectedIngredient = list
                     fridgeIngredients.clear()
                     fridgeIngredients.addAll(list)
                     Log.d("DetectionVM/Firebase", "냉장고 갱신 완료: ${list.size}개")

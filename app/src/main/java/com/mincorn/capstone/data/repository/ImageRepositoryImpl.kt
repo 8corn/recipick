@@ -1,55 +1,36 @@
 package com.mincorn.capstone.data.repository
 
-import android.util.Log
-import com.google.gson.Gson
-import com.mincorn.capstone.data.source.local.PreferenceManager
-import com.mincorn.capstone.data.source.remote.response.DetectionResponse
+import android.net.Uri
+import com.google.firebase.storage.FirebaseStorage
 import com.mincorn.capstone.domain.respository.ImageRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
-import okio.IOException
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import javax.inject.Inject
+import kotlin.coroutines.resumeWithException
 
 class ImageRepositoryImpl @Inject constructor(
-    private val client: OkHttpClient,
-    private val preferenceManager: PreferenceManager
+    private val storage: FirebaseStorage
 ): ImageRepository {
-    override suspend fun uploadImage(imageFile: File): String = withContext(Dispatchers.IO){
-        var baseUrl = preferenceManager.getNgrokUrl().trim().removeSuffix("/")
+    override suspend fun uploadImage(imageFile: File): String = suspendCancellableCoroutine{ continuation ->
+        val fileName = "photo_${System.currentTimeMillis()}.jpg"
+        val storageRef = storage.reference.child("ingredients/$fileName")
 
-        if (!baseUrl.startsWith("http")) {
-            baseUrl = "https://$baseUrl"
-        }
+        val uploadTask = storageRef.putFile(Uri.fromFile(imageFile))
 
-        val url = "$baseUrl/upload-image/"
-        Log.d("ImageRepository", "업로드 URL: $url")
+        uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let { throw it }
+            }
+            storageRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result.toString()
+                continuation.resume(downloadUri) {
 
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart(
-                "file", imageFile.name,
-                imageFile.asRequestBody("image/*".toMediaType())
-            )
-            .build()
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("서버 응답 에러 발생: $response")
-
-            val finalImageUrl = "$baseUrl/static/${imageFile.name}"
-            Log.d("ImageRepository", "저장된 이미지 경로: $finalImageUrl")
-
-            return@withContext finalImageUrl
+                }
+            } else {
+                continuation.resumeWithException(task.exception ?: Exception("업로드 실패"))
+            }
         }
     }
 }
