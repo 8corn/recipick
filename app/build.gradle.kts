@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.guava)
 
+    implementation(libs.androidx.datastore.preferences)
+
     implementation (libs.hilt.android)
     kapt (libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)

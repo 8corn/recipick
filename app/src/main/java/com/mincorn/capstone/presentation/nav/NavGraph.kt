@@ -15,11 +15,14 @@ import com.mincorn.capstone.presentation.join.LoginActivity
 import com.mincorn.capstone.presentation.main.AddCamera
 import com.mincorn.capstone.presentation.main.MediaPipeCheck
 import com.mincorn.capstone.presentation.main.Recipick
+import com.mincorn.capstone.presentation.main.SearchMenu
 import com.mincorn.capstone.presentation.main.TypeDetail
 import com.mincorn.capstone.presentation.recipick.PickRecipick
 import com.mincorn.capstone.presentation.recipick.SearchRecipick
 import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun NavGraph (
@@ -40,6 +43,20 @@ fun NavGraph (
         }
         composable ("SearchRecipick") {
             SearchRecipick(navController)
+        }
+        composable (
+            route = "SearchMenu/{keyword}",
+            arguments = listOf(navArgument("keyword") {type = NavType.StringType})
+        ) {backStackEntry ->
+            val keyword = backStackEntry.arguments?.getString("keyword") ?: ""
+            SearchMenu(
+                navController = navController,
+                keyword = keyword,
+                onRecipeClick = { name, imageUrl ->
+                    val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+                    navController.navigate("PickRecipick/$name/$encodedUrl")
+                }
+            )
         }
         composable ("JoinActivity") {
             JoinActivity(navController)

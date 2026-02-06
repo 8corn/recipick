@@ -1,5 +1,6 @@
 package com.mincorn.capstone.presentation.main
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mincorn.capstone.R
+import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -39,14 +42,29 @@ import java.nio.charset.StandardCharsets
 fun SearchScreen(
     navController: NavController,
     searchViewModel: SearchViewModel = hiltViewModel(),
+    detectionViewModel: DetectionViewModel = hiltViewModel(),
     onRecipeClick: (String, String) -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        searchViewModel.loadRecipes(listOf("돼지고기", "양파", "고추장"))
-    }
+    val context = LocalContext.current
+
+    val ingredients = detectionViewModel.fridgeIngredients
+    val isInitialLoading = detectionViewModel.isInitialLoading
 
     val recipes = searchViewModel.recipes
     val isRefreshing = searchViewModel.isRefreshing
+
+    LaunchedEffect(ingredients, isInitialLoading) {
+        if (isInitialLoading) return@LaunchedEffect
+
+        val ingredientNames = ingredients.map { it.name }
+
+        if (ingredientNames.isNotEmpty()) {
+            searchViewModel.loadRecipes(ingredientNames)
+        } else {
+            searchViewModel.recipes.clear()
+            Toast.makeText(context, "현재 가지고 계신 재료가 없습니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Surface (
         modifier = Modifier
@@ -96,7 +114,14 @@ fun SearchScreen(
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = {
-                    searchViewModel.loadRecipes(listOf("돼지고기", "양파", "고추장"))
+                    val ingredientNames = ingredients.map { it.name }
+
+                    if (ingredientNames.isNotEmpty()) {
+                        searchViewModel.loadRecipes(ingredientNames)
+                    } else {
+                        searchViewModel.recipes.clear()
+                        Toast.makeText(context, "현재 가지고 계신 재료가 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -114,23 +139,29 @@ fun SearchScreen(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    val encodedImageUrl = URLEncoder.encode(
-                                        recipe.imageUrl,
-                                        StandardCharsets.UTF_8.toString()
-                                    )
                                     onRecipeClick(recipe.name, recipe.imageUrl)
-                                }
+                                },
                         ) {
                             AsyncImage(
                                 model = recipe.imageUrl,
                                 contentDescription = recipe.name,
-                                modifier = Modifier.size(64.dp),
+                                modifier = Modifier
+                                    .size(64.dp),
                             )
                             Column(
-                                modifier = Modifier.padding(start = 8.dp)
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
                             ) {
-                                Text(text = recipe.name, fontWeight = FontWeight.Bold)
-                                Text(text = recipe.description)
+                                Text(
+                                    text = recipe.name,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black,
+                                )
+
+                                Text(
+                                    text = recipe.description,
+                                    color = Color(0xFF868686),
+                                )
                             }
                         }
                     }

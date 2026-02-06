@@ -106,14 +106,22 @@ fun LoginActivity(
             TextField(
                 value = id,
                 onValueChange = setId,
-                placeholder = { Text("이메일을 입력해주세요.") },
+                placeholder = {
+                    Text(
+                        "이메일을 입력해주세요."
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
                     .padding(horizontal = 30.dp)
                     .border(1.dp, Color(0xFF868686), RoundedCornerShape(19.dp)),
-                textStyle = TextStyle(fontSize = 20.sp),
                 singleLine = true,
+                textStyle = TextStyle(
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -129,14 +137,22 @@ fun LoginActivity(
             TextField(
                 value = pw,
                 onValueChange = setPw,
-                placeholder = { Text("비밀번호를 입력해주세요.") },
+                placeholder = {
+                    Text(
+                        text = "비밀번호를 입력해주세요.",
+                    )
+                },
                 visualTransformation = PasswordVisualTransformation('\u2022'),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
                     .padding(horizontal = 30.dp)
                     .border(1.dp, Color(0xFF868686), RoundedCornerShape(19.dp)),
-                textStyle = TextStyle(fontSize = 20.sp),
+                textStyle = TextStyle(
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,

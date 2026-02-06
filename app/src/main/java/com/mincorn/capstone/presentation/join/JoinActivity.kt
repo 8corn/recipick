@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -122,6 +123,11 @@ fun JoinActivity(
                         .padding(top = 2.dp)
                         .border(1.dp, Color(0xFF868686), RoundedCornerShape(19.dp)),
                     singleLine = true,
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
@@ -157,6 +163,11 @@ fun JoinActivity(
                             RoundedCornerShape(19.dp)
                         ),
                     singleLine = true,
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
@@ -185,7 +196,7 @@ fun JoinActivity(
                     value = pw,
                     onValueChange = {
                         setPw(it)
-                        if (it.length > 0 && it.length < 8) {
+                        if (it.isNotEmpty() && it.length < 8) {
                             setPwErrorText("비밀번호는 8자리 이상이어야 합니다.")
                         } else {
                             setPwErrorText(null)
@@ -198,6 +209,11 @@ fun JoinActivity(
                         .padding(top = 2.dp)
                         .border(1.dp, Color(0xFF868686), RoundedCornerShape(19.dp)),
                     singleLine = true,
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
@@ -239,6 +255,11 @@ fun JoinActivity(
                             RoundedCornerShape(19.dp)
                         ),
                     singleLine = true,
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,

@@ -24,12 +24,17 @@ fun Recipick(
     val bottomNavController = rememberNavController()
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(bottomNavController) }
+        bottomBar = {
+            BottomNavigationBar(bottomNavController)
+        }
     ) { innerPadding ->
         NavHost(
             navController = bottomNavController,
             startDestination = "home",
-            Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(
+                    bottom = innerPadding.calculateBottomPadding()
+                )
         ) {
             composable("home") {
                 HomeScreen(

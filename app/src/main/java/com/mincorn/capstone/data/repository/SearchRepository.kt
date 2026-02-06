@@ -23,7 +23,7 @@ class RecipeRepositoryImpl @Inject constructor(
         val prompt = """
             사용자가 가진 재료: ${ingredients.joinToString(", ")}
             
-            위 재료로 만들 수 있는 요리를 5개 이상 추천해줘.
+            위 재료로 만들 수 있는 요리를 10개 이상 추천해줘.
             응답은 반드시 아래와 같은 JSON 형식의 리스트로만 답변해줘. 다른 설명은 하지마.
             각 요리의 'translatedName'은 Unsplash에서 음식 사진을 검색할 때 사용할 영어 키워드여야 해.
     
@@ -61,6 +61,30 @@ class RecipeRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             RecipeDetail("재료를 불러올 수 없습니다.", "레시피를 불러올 수 없습니다.")
         }
+    }
+
+    override suspend fun getRecipesByKeyword(keyword: String): List<Recipe> {
+        val prompt = """
+            사용자가 검색한 요리: $keyword
+            
+            '$keyword'와 관련하여 조리법이나 스타일이 다른 다양한 레시피 10개 이상 추천해줘.
+            예를 들어 사용자가 '갈비찜'을 검색했다면, '매운 갈비찜', '궁중 갈비찜', '백종원표 갈비찜' 등 구체적이고 서로 다른 특징을 가진 메뉴 이름을 정해줘.
+            
+            응답은 반드시 아래와 같은 JSON 형식의 리스트로만 답변해줘. 다른 설명은 하지마.
+            'translatedName'은 Unsplash에서 음식 사진을 검색할 때 사용할 영어 키워드여야 해 (음식 특징이 잘 드러나게).
+    
+            JSON 형식 예시:
+            [
+              {
+                "name": "구체적인 요리 이름 (예: 매콤 칼칼한 매운 갈비찜)",
+                "description": "이 레시피만의 특징을 살린 1줄 설명",
+                "translatedName": "Spicy braised short ribs"
+              }
+            ]
+        """.trimIndent()
+
+        val response = geminiDataSource.generateText(prompt)
+        return parseRecipes(response)
     }
 
     private suspend fun parseRecipes(jsonResponse: String): List<Recipe> {

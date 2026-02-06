@@ -14,6 +14,7 @@ interface ImageRepository {
 interface RecipeRepository {
     suspend fun getRecommendations(ingredients: List<String>): List<Recipe>
     suspend fun getRecipeDetail(name: String): RecipeDetail
+    suspend fun getRecipesByKeyword(keyword: String): List<Recipe>
 }
 
 interface StorageRepository {

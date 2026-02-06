@@ -19,6 +19,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             NavGraph(
                 startPage = "LoginActivity"
+//                startPage = "SearchRecipick"
 //                startPage = "Recipick"
             )
         }

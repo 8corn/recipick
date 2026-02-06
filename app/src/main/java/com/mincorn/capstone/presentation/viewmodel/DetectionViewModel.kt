@@ -55,6 +55,9 @@ class DetectionViewModel @Inject constructor(
 
     private val gson = Gson()
 
+    var isInitialLoading by mutableStateOf(true)
+        private set
+
     init {
         loadIngredients()
     }
@@ -135,7 +138,10 @@ class DetectionViewModel @Inject constructor(
     }
 
     private fun loadIngredients() {
-        val uid = auth.currentUser?.uid ?: return
+        val uid = auth.currentUser?.uid ?: run {
+            isInitialLoading = false
+            return
+        }
 
         viewModelScope.launch {
             try {
@@ -143,9 +149,12 @@ class DetectionViewModel @Inject constructor(
                     detectedIngredient = list
                     fridgeIngredients.clear()
                     fridgeIngredients.addAll(list)
+
+                    isInitialLoading = false
                     Log.d("DetectionVM/Firebase", "냉장고 갱신 완료: ${list.size}개")
                 }
             } catch (e: Exception) {
+                isInitialLoading = false
                 Log.e("DetectionVM/Firebase", "재료 로드 실패", e)
             }
         }

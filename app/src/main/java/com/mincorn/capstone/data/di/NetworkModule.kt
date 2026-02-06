@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
 import com.mincorn.capstone.R
+import com.mincorn.capstone.data.datastore.SearchDataStore
 import com.mincorn.capstone.data.source.remote.Gemini
 import com.mincorn.capstone.data.source.remote.UnsplashApi
 import dagger.Module
@@ -74,5 +75,11 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder().build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchDataStore(@ApplicationContext context: Context): SearchDataStore {
+        return SearchDataStore(context)
     }
 }
