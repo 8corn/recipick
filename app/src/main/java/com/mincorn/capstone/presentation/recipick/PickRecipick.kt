@@ -5,8 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -31,15 +34,18 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mincorn.capstone.R
 import com.mincorn.capstone.domain.model.SavedRecipe
-import com.mincorn.capstone.presentation.other.SectionText
+import com.mincorn.capstone.presentation.other.RecipeInstructions
 import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
 import com.mincorn.capstone.presentation.viewmodel.StorageViewModel
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun PickRecipick(
     navController: NavController,
     pickName: String,
     imageUrl: String,
+    description: String,
     searchViewModel: SearchViewModel = hiltViewModel(),
     firebaseViewModel: StorageViewModel = hiltViewModel()
 ) {
@@ -97,12 +103,13 @@ fun PickRecipick(
                             detail?.let {
                                 val savedRecipe = SavedRecipe(
                                     name = pickName,
+                                    description = description,
                                     ingredients = it.ingredients,
                                     recipe = it.instructions,
                                     image = imageUrl
                                 )
                                 firebaseViewModel.saveRecipe(savedRecipe)
-                                Toast.makeText(context, "저장공간에 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "저장소에 저장되었습니다.", Toast.LENGTH_SHORT).show()
                             }
                         }
                 )
@@ -145,15 +152,45 @@ fun PickRecipick(
                             .size(280.dp)
                     )
 
-                    SectionText(
-                        title = "필요한 재료",
-                        content = detail.ingredients
+                    Text(
+                        text = "필요한 재료",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                            .padding(horizontal = 20.dp),
+                        textAlign = TextAlign.Center
                     )
 
-                    SectionText(
-                        title = "레시픽",
-                        content = detail.instructions
+                    Text(
+                        text = detail.ingredients,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp, horizontal = 20.dp),
+                        textAlign = TextAlign.Center
                     )
+
+                    Text(
+                        text = "레시픽",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                            .padding(horizontal = 20.dp),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    RecipeInstructions(detail.instructions)
+
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
             }
         }

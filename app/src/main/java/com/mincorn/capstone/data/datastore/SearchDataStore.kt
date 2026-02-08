@@ -28,6 +28,9 @@ class SearchDataStore (
     }
 
     suspend fun saveSearch(keyword: String) {
+        val cleanKeyword = keyword.trim()
+        if (cleanKeyword.isEmpty()) return
+
         context.dataStore.edit { prefs ->
             val currentJson = prefs[SEARCH_HISTORY_KEY] ?: ""
             val currentList: MutableList<String> =
@@ -37,8 +40,8 @@ class SearchDataStore (
                     gson.fromJson(currentJson, object : TypeToken<List<String>>() {}.type)
                 }
 
-            currentList.remove(keyword)
-            currentList.add(0, keyword)
+            currentList.remove(cleanKeyword)
+            currentList.add(0, cleanKeyword)
 
             val limitedList = currentList.take(5)
             prefs[SEARCH_HISTORY_KEY] = gson.toJson(limitedList)

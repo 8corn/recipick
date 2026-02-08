@@ -25,6 +25,7 @@ class StorageRepositoryImpl @Inject constructor(
                 val recipes = snapshot?.documents?.mapNotNull { doc ->
                     SavedRecipe(
                         name = doc.getString("name") ?: "",
+                        description = doc.getString("description") ?: "",
                         ingredients = doc.getString("ingredients") ?: "",
                         recipe = doc.getString("recipe") ?: "",
                         image = doc.getString("image") ?: "",

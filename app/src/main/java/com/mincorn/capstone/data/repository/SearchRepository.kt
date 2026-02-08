@@ -46,9 +46,16 @@ class RecipeRepositoryImpl @Inject constructor(
         val prompt = """
             $name 요리의 레시피를 알려줘.
             응답은 반드시 아래 JSON 형식으로만 답변해줘. 다른 설명은 하지마.
+            
+            규칙:
+            1. 'instructions'는 각 단계를 "1번", "2번"과 같이 시작해.
+            2. 각 단계가 끝나면 반드시 줄바꿈 문자(\n)를 넣어줘.
+            3. 만약 특정 단계가 선택 사항이라면 "2번(선택 사항)" 처럼 번호 바로 옆에 붙여줘.
+            
+            예시:
             {
-              "ingredients": "필요한 재료들을 쉼표로 구분한 문자열",
-              "instructions": "요리 순서를 1. 2. 3. 번호를 붙여 설명한 문자열"
+              "ingredients": "재료1, 재료2, 재료3",
+              "instructions": "1번\n양파를 썹니다.\n2번(선택 사항)\n청양고추를 넣습니다."
             }
         """.trimIndent()
 

@@ -57,10 +57,13 @@ fun SearchRecipick(
     val recentSearches by searchViewModel.recentSearches.collectAsStateWithLifecycle()
 
     val performSearch = { searchQuery: String ->
-        if (searchQuery.isNotBlank()) {
-            searchViewModel.addSearchKeyword(searchQuery)
 
-            val encodedQuery = URLEncoder.encode(searchQuery, StandardCharsets.UTF_8.toString())
+        val cleanQuery = searchQuery.trim()
+
+        if (cleanQuery.isNotBlank()) {
+            searchViewModel.addSearchKeyword(cleanQuery)
+
+            val encodedQuery = URLEncoder.encode(cleanQuery, StandardCharsets.UTF_8.toString())
 
             keyboardController?.hide()
             navController.navigate("SearchMenu/$encodedQuery")

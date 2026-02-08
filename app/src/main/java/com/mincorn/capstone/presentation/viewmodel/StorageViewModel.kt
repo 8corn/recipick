@@ -29,6 +29,10 @@ class StorageViewModel @Inject constructor(
     fun saveRecipe(recipe: SavedRecipe) {
         val uid = auth.currentUser?.uid ?: return
 
+        if (savedRecipes.any { it.name == recipe.name }) {
+            return
+        }
+
         viewModelScope.launch {
             saveRecipesUseCase(uid, recipe)
         }

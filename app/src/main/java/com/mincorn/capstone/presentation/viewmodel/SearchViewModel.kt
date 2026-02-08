@@ -57,8 +57,11 @@ class SearchViewModel @Inject constructor(
     }
 
     fun addSearchKeyword(keyword: String) {
+        val cleanKeyword = keyword.trim()
+        if (cleanKeyword.isBlank()) return
+
         viewModelScope.launch {
-            searchDataStore.saveSearch(keyword)
+            searchDataStore.saveSearch(cleanKeyword)
         }
     }
 

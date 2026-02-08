@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -35,16 +36,19 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun SearchMenu(
     navController: NavController,
     keyword: String,
     searchViewModel: SearchViewModel = hiltViewModel(),
-    onRecipeClick: (String, String) -> Unit
+    onRecipeClick: (String, String, String) -> Unit
 ) {
-    LaunchedEffect(keyword) {
-        searchViewModel.searchRecipes(keyword)
+    val cleanKeyword = remember(keyword) { keyword.trim() }
+    LaunchedEffect(cleanKeyword) {
+        searchViewModel.searchRecipes(cleanKeyword)
     }
 
     val searchMenus by searchViewModel.searchResults.collectAsStateWithLifecycle()
@@ -77,7 +81,7 @@ fun SearchMenu(
                 )
 
                 Text(
-                    text = keyword,
+                    text = cleanKeyword,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -104,8 +108,8 @@ fun SearchMenu(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "검색된 메뉴가 없습니다.",
-                            fontSize = 20.sp,
+                            text = "$cleanKeyword(으)로 검색 중...",
+                            fontSize = 16.sp,
                         )
                     }
                 } else {
@@ -118,7 +122,7 @@ fun SearchMenu(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    onRecipeClick(searchMenu.name, searchMenu.imageUrl)
+                                    onRecipeClick(searchMenu.name, searchMenu.imageUrl, searchMenu.description)
                                 },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -138,10 +142,12 @@ fun SearchMenu(
                                 Text(
                                     text = searchMenu.name,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp
+                                    fontSize = 18.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
 
-                                Spacer(modifier = Modifier.padding(vertical = 5.dp))
+                                Spacer(modifier = Modifier.padding(vertical = 3.dp))
 
                                 Text(
                                     text = searchMenu.description,

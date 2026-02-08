@@ -1,12 +1,9 @@
 package com.mincorn.capstone.presentation.other
 
-import android.view.RoundedCorner
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +16,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -43,30 +39,48 @@ import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.uiModel.NavigationItem
 
 @Composable
-fun SectionText(title: String, content: String) {
-    Text(
-        text = title,
-        fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = Color.Black,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-            .padding(horizontal = 20.dp),
-        textAlign = TextAlign.Center
-    )
+fun RecipeInstructions(instructions: String) {
+    val steps = remember(instructions) {
+        instructions.split(Regex("(?=\\d+번)"))
+            .filter { it.isNotBlank() }
+            .map { it.trim() }
+    }
 
-    Text(
-        text = content,
-        fontSize = 16.sp,
-        color = Color.Black,
+    Column (
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp, horizontal = 20.dp),
-        textAlign = TextAlign.Center
-    )
+            .padding(horizontal = 16.dp),
+    ) {
+        steps.forEach { step ->
+            val lines = step.split("\n").filter { it.isNotBlank() }
+            val stepTitle = lines.firstOrNull() ?: ""
+            val stepContent = lines.drop(1).joinToString("\n").trim()
+
+            Column (
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = stepTitle,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color.Black,
+                )
+
+                Spacer(modifier = Modifier.height(3.dp))
+
+                Text(
+                    text = stepContent,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp,
+                    color = Color(0xFF868686)
+                )
+
+                Spacer(modifier = Modifier.height(13.dp))
+            }
+        }
+    }
 }
-
 
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
@@ -161,7 +175,6 @@ fun RecentSearchTag(
                     )
                 ),
                 modifier = Modifier
-                    .padding(top = 7.dp)
                     .wrapContentHeight(align = Alignment.CenterVertically)
             )
 

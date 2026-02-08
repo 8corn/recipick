@@ -6,6 +6,7 @@ import javax.inject.Inject
 
 data class SavedRecipe(
     val name: String,
+    val description: String,
     val ingredients: String,
     val recipe: String,
     val image: String,
