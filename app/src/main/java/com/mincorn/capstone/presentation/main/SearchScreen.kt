@@ -43,7 +43,7 @@ fun SearchScreen(
     navController: NavController,
     searchViewModel: SearchViewModel = hiltViewModel(),
     detectionViewModel: DetectionViewModel = hiltViewModel(),
-    onRecipeClick: (String, String) -> Unit
+    onRecipeClick: (String, String, String) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -139,7 +139,7 @@ fun SearchScreen(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    onRecipeClick(recipe.name, recipe.imageUrl)
+                                    onRecipeClick(recipe.name, recipe.imageUrl, recipe.description)
                                 },
                         ) {
                             AsyncImage(

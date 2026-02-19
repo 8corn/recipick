@@ -229,26 +229,6 @@ fun AddCamera (
                                                         }
                                                     }
                                                 }
-
-//                                                val route = detectionViewModel.processImageAndGetRoute(photoFile)
-//
-//                                                ContextCompat.getMainExecutor(context).execute {
-//                                                    if (route.isEmpty()) {
-//                                                        Toast.makeText(context, "식재료를 인식하지 못했습니다. 다시 찍어주세요.",Toast.LENGTH_LONG).show()
-//
-//                                                        return@execute
-//                                                    }
-//                                                    try {
-//                                                        navController.navigate(route) {
-//                                                            popUpTo("AddCamera") {
-//                                                                inclusive = true
-//                                                            }
-//                                                        }
-//                                                    } catch (e: Exception) {
-//                                                        Log.e("Navigation", "경로 이동 실패: $route", e)
-//                                                        Toast.makeText(context, "분석 결과를 표시할 수 없습니다.\n다시 시도해주세요.",Toast.LENGTH_SHORT).show()
-//                                                    }
-//                                                }
                                             }
 
                                             override fun onError(exception: ImageCaptureException) {

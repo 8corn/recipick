@@ -39,7 +39,6 @@ fun Recipick(
             composable("home") {
                 HomeScreen(
                     navController = navController,
-                    detectionViewModel = detectionViewModel,
                     onCameraClick = {
                         navController.navigate("AddCamera")
                     }
@@ -48,9 +47,10 @@ fun Recipick(
             composable("search") {
                 SearchScreen(
                     navController = navController,
-                    onRecipeClick = { name, imageUrl ->
+                    onRecipeClick = { name, imageUrl, description ->
                         val encodedUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
-                        navController.navigate("PickRecipick/$name/$encodedUrl")
+                        val encodedDesc = URLEncoder.encode(description, StandardCharsets.UTF_8.toString())
+                        navController.navigate("PickRecipick/$name/$encodedUrl/$encodedDesc")
                     }
                 )
             }

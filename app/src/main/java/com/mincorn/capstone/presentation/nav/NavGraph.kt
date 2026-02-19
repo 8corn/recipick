@@ -93,13 +93,15 @@ fun NavGraph (
         ) { backStackEntry ->
             val typeName = backStackEntry.arguments?.getString("typeName") ?: ""
 
+            val decodedTypeName = URLDecoder.decode(typeName, StandardCharsets.UTF_8.toString())
+
             TypeDetail(
                 navController = navController,
                 onCameraClick = {
                     navController.navigate("AddCamera")
                 },
                 detectionViewModel = detectionViewModel,
-                typeName = typeName,
+                typeName = decodedTypeName,
             )
         }
         composable (

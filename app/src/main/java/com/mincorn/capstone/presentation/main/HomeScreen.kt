@@ -37,7 +37,6 @@ import java.net.URLEncoder
 @Composable
 fun HomeScreen(
     navController: NavController,
-    detectionViewModel: DetectionViewModel,
     onCameraClick: () -> Unit
 ) {
     val types = listOf(

@@ -25,6 +25,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
@@ -97,21 +99,42 @@ class DetectionViewModel @Inject constructor(
                     if (uid != null) {
                         val uploadedUrl = imageRepository.uploadImage(photoFile)
 
-                        parse.forEach { ingredient ->
-                            val finalItem = ingredient.copy(
-                                imageUri = uploadedUrl
-                            )
+                        parse.map { newIngredient ->
+                            val existingItem = fridgeIngredients.find { it.name == newIngredient.name }
+
+                            val finalItem = if (existingItem != null) {
+                                val currentCount = existingItem.count
+                                val newCount = newIngredient.count
+
+                                newIngredient.copy(
+                                    count = currentCount + newCount,
+                                    imageUri = uploadedUrl
+                                )
+                            } else {
+                                newIngredient.copy(imageUri = uploadedUrl)
+                            }
                             storageRepository.saveIngredient(uid, finalItem)
+
+                            finalItem
                         }
+                    } else {
+                        parse
                     }
-                    parse
                 }
 
-                detectedIngredient = result
+                val newList = (fridgeIngredients + result).distinctBy { it.name }
+
+                detectedIngredient = newList
+                fridgeIngredients.clear()
+                fridgeIngredients.addAll(newList)
+
                 isLoading = false
 
                 val firstCategory = result.firstOrNull()?.category ?: "기타"
-                onComplete("typeDetail/$firstCategory")
+
+                val encodedCategory = URLEncoder.encode(firstCategory, StandardCharsets.UTF_8.toString())
+
+                onComplete("typeDetail/$encodedCategory")
                 Log.d("Gemini", "5. 화면 이동 명령 전송")
 
             } catch (e: Exception) {
