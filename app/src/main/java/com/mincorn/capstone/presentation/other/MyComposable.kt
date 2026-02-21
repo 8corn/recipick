@@ -41,7 +41,7 @@ import com.mincorn.capstone.presentation.uiModel.NavigationItem
 @Composable
 fun RecipeInstructions(instructions: String) {
     val steps = remember(instructions) {
-        instructions.split(Regex("(?=\\d+번)"))
+        instructions.split(Regex("(?=\\b\\d+번)"))
             .filter { it.isNotBlank() }
             .map { it.trim() }
     }

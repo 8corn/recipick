@@ -8,17 +8,16 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlin.collections.emptyList
 
 class SearchDataStore (
     private val context: Context
 ) {
     private val Context.dataStore by preferencesDataStore(name = "search_prefs")
-    private val SEARCH_HISTORY_KEY = stringPreferencesKey("search_history")
+    private val searchHistoryKey = stringPreferencesKey("search_history")
     private val gson = Gson()
 
     val getRecentSearches: Flow<List<String>> = context.dataStore.data.map { prefs ->
-        val json = prefs[SEARCH_HISTORY_KEY] ?: ""
+        val json = prefs[searchHistoryKey] ?: ""
 
         if (json.isEmpty()) {
             emptyList()
@@ -32,7 +31,7 @@ class SearchDataStore (
         if (cleanKeyword.isEmpty()) return
 
         context.dataStore.edit { prefs ->
-            val currentJson = prefs[SEARCH_HISTORY_KEY] ?: ""
+            val currentJson = prefs[searchHistoryKey] ?: ""
             val currentList: MutableList<String> =
                 if (currentJson.isEmpty()) {
                     mutableListOf()
@@ -44,18 +43,18 @@ class SearchDataStore (
             currentList.add(0, cleanKeyword)
 
             val limitedList = currentList.take(5)
-            prefs[SEARCH_HISTORY_KEY] = gson.toJson(limitedList)
+            prefs[searchHistoryKey] = gson.toJson(limitedList)
         }
     }
 
     suspend fun deleteSearch(keyword: String) {
         context.dataStore.edit { prefs ->
-            val currentJson = prefs[SEARCH_HISTORY_KEY] ?: ""
+            val currentJson = prefs[searchHistoryKey] ?: ""
             if (currentJson.isNotEmpty()) {
                 val currentList: MutableList<String> = gson.fromJson(currentJson, object : TypeToken<List<String>>() {}.type)
 
                 currentList.remove(keyword)
-                prefs[SEARCH_HISTORY_KEY] = gson.toJson(currentList)
+                prefs[searchHistoryKey] = gson.toJson(currentList)
             }
         }
     }

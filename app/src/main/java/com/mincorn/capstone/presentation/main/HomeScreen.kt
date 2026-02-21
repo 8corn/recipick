@@ -1,6 +1,5 @@
 package com.mincorn.capstone.presentation.main
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -31,7 +30,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.uiModel.Type
-import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import java.net.URLEncoder
 
 @Composable

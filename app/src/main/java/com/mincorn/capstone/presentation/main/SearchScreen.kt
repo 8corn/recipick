@@ -34,8 +34,6 @@ import coil.compose.AsyncImage
 import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.viewmodel.DetectionViewModel
 import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

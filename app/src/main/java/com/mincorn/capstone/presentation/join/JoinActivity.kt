@@ -53,6 +53,14 @@ fun JoinActivity(
     val (pwErrorText, setPwErrorText) = remember { mutableStateOf<String?>(null) }
     val (pwCheckErrorText, setCheckPwErrorText) = remember { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(pw, pwCheck) {
+        if (pwCheck.isNotEmpty()) {
+            setCheckPwErrorText(if (pw != pwCheck) "비밀번호가 일치하지 않습니다." else null)
+        } else {
+            setCheckPwErrorText(null)
+        }
+    }
+
     LaunchedEffect(authViewModel.errorMessage) {
         authViewModel.errorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -150,7 +158,7 @@ fun JoinActivity(
                     onValueChange = {
                         setId(it)
                         setIdErrorText(
-                            if (!Validator.isValidEmail(it)) null else "올바른 이메일 형식이 아닙니다."
+                            if (Validator.isValidEmail(it)) null else "올바른 이메일 형식이 아닙니다."
                         )
                     },
                     modifier = Modifier
@@ -243,7 +251,6 @@ fun JoinActivity(
                     visualTransformation = PasswordVisualTransformation('\u2022'),
                     onValueChange = {
                         setPwCheck(it)
-                        setCheckPwErrorText(if (pw != it) "비밀번호가 일치하지 않습니다." else null)
                     },
                     modifier = Modifier
                         .fillMaxWidth()

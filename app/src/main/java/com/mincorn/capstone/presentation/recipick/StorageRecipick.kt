@@ -48,7 +48,6 @@ fun StorageRecipick(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
         ) {
             Box(
                 modifier = Modifier
@@ -86,9 +85,11 @@ fun StorageRecipick(
                 thickness = 1.dp,
                 color = Color(0xFF868686),
             )
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
             ) {
                 val decodedIngredients = URLDecoder.decode(ingredients, StandardCharsets.UTF_8.toString())
                 val decodedInstructions = URLDecoder.decode(instructions, StandardCharsets.UTF_8.toString())

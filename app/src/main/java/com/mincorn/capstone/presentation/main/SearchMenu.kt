@@ -36,8 +36,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.mincorn.capstone.R
 import com.mincorn.capstone.presentation.viewmodel.SearchViewModel
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @Composable
 fun SearchMenu(

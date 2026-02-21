@@ -38,7 +38,7 @@ fun NavGraph (
         startDestination = startPage
     ) {
         composable ("Recipick") {
-            Recipick(navController, detectionViewModel)
+            Recipick(navController)
         }
         composable ("SearchRecipick") {
             SearchRecipick(navController)

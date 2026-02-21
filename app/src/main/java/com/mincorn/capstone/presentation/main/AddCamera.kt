@@ -90,8 +90,6 @@ fun AddCamera (
         if (!hasCameraPermission) {
             launcher.launch(Manifest.permission.CAMERA)
         }
-
-        detectionViewModel.prepareAi()
     }
 
     LaunchedEffect(lensFacing, hasCameraPermission) {

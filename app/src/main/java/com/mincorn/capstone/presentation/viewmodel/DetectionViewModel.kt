@@ -1,6 +1,5 @@
 package com.mincorn.capstone.presentation.viewmodel
 
-import android.content.Context
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -13,15 +12,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.mincorn.capstone.data.repository.PROMPT_TEXT
-import com.mincorn.capstone.data.source.local.ImageAnalyzer
 import com.mincorn.capstone.data.source.remote.Gemini
 import com.mincorn.capstone.domain.model.DetectedIngredient
 import com.mincorn.capstone.domain.respository.ImageRepository
 import com.mincorn.capstone.domain.respository.StorageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -31,14 +27,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DetectionViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val auth: FirebaseAuth,
     private val storageRepository: StorageRepository,
     private val imageRepository: ImageRepository,
 ) : ViewModel() {
-
-    private val analyzer = ImageAnalyzer(context)
-
     var isLoading by mutableStateOf(false)
         private set
 
@@ -64,14 +56,6 @@ class DetectionViewModel @Inject constructor(
         loadIngredients()
     }
 
-
-    fun prepareAi() {
-        viewModelScope.launch(Dispatchers.IO) {
-            delay(1000)
-            analyzer.setupClassifier()
-        }
-    }
-
     fun analyzeWithGemini(apiKey: String, photoFile: File, onComplete: (String) -> Unit) {
 
         viewModelScope.launch {
@@ -82,12 +66,17 @@ class DetectionViewModel @Inject constructor(
                 isLoading = true
 
                 val result = withContext(Dispatchers.IO) {
-                    val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+                    val options = BitmapFactory.Options().apply {
+                        inSampleSize = 4
+                    }
+                    val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath, options)
                     Log.d("Gemini", "2. 비트맵 변환 완료: ${bitmap != null}")
 
                     val gemini = Gemini(apiKey)
                     val jsonResult = gemini.generateText(PROMPT_TEXT, bitmap)
                     Log.d("Gemini", "3. Gemini 응답 수신: $jsonResult")
+
+                    bitmap.recycle()
 
                     val parse = parseJsonToIngredients(jsonResult)
 

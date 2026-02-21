@@ -1,10 +1,8 @@
 package com.mincorn.capstone.presentation.join
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,8 +25,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,28 +41,25 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
-import com.google.firebase.firestore.FirebaseFirestore
-import com.kakao.sdk.auth.model.OAuthToken
-import com.kakao.sdk.user.UserApiClient
 import com.mincorn.capstone.R
-import com.mincorn.capstone.presentation.MainActivity
 import com.mincorn.capstone.presentation.other.signInKakao
 import com.mincorn.capstone.presentation.other.signInNaver
 import com.mincorn.capstone.presentation.viewmodel.AuthViewModel
-import com.navercorp.nid.NaverIdLoginSDK
-import com.navercorp.nid.oauth.NidOAuthLogin
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val isFailState = mutableStateOf(false)
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun LoginActivity(
     navController: NavController,
@@ -72,6 +69,9 @@ fun LoginActivity(
     val (id, setId) = remember { mutableStateOf("") }
     val (pw, setPw) = remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    val activity = context as? FragmentActivity
+    var backPressedOnce by remember { mutableStateOf(false) }
 
     LaunchedEffect(authViewModel.loginSuccess) {
         if (authViewModel.loginSuccess) {
@@ -86,6 +86,18 @@ fun LoginActivity(
     Surface(
         color = Color.White
     ) {
+        BackHandler {
+            if (backPressedOnce) {
+                activity?.finish()
+            } else {
+                backPressedOnce = true
+                Toast.makeText(context, "뒤로가기 버튼을 두번 누르면 종료됩니다.", Toast.LENGTH_SHORT).show()
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(2000)
+                    backPressedOnce = false
+                }
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize(),
